@@ -1,111 +1,216 @@
 #include "code128.h"
 
-const QString BarArray[] = {
-    "155", "515", "551", "449", "485", "845", "458", "494", "854",
-    "548", "584", "944", "056", "416", "452", "065", "425", "461", "560", "506",
-    "542", "164", "524", "212", "245", "605", "641", "254", "614", "650", "119",
-    "191", "911", "089", "809", "881", "098", "818", "890", "188", "908", "980",
-    "01:", "092", "812", "029", "0:1", "821", "221", "182", "902", "128", "1:0",
-    "122", "209", "281", ":01", "218", "290", ":10", "230", "5<0", ";00", "04=",
-    "0<5", "40=", "4<1", "<05", "<41", "05<", "0=4", "41<", "4=0", "<14", "<50",
-    "=40", "50<", "320", "=04", "830", "047", "407", "443", "074", "434", "470",
-    "344", "704", "740", "113", "131", "311", "00;", "083", "803", "038", "0;0",
-    "308", "380", "023", "032", "203", "302", "A", "B", "C", "@"
-};
-
-
-
-QString Code128::encodeToCode128(const QString& src)
+QString encodeToCode128(const QString& src)
 {
-    int i, BInd, CCode, BCode[1024];
-    QChar ch, ch2, CurMode;
+    int ind;
+    int checksum = 0;
+    int mini;
+    int dummy;
+    bool tableB;
+    QString code128;
+    int srcLength;
 
-    //Собираем строку кодов
-    BInd = 0;
-    CurMode = 0;
-    for (i = 0; i < src.length(); ) {
-      //Текущий символ в строке
-      ch = src.at(i);
-      ++i;
-      //Разбираем только символы от 0 до 127
-      if (ch.unicode() <= 127) {
-        //Следующий символ
-        if (i < src.length()) {
-          ch2 = src.at(i);
-        } else {
-          ch2 = 0;
-        }
+    srcLength = src.length();
 
-        //Пара цифр - режим С
+    tableB = true;
+    ind = 0;
 
-        if (ch.isDigit() && ch2.isDigit()) {
-          ++i;
-          if (BInd == 0) {
-            //Начало с режима С
-            CurMode = 'C';
-            BCode[BInd] = 105;
-            ++BInd;
-          } else if (CurMode != 'C') {
-            //Переключиться на режим С
-            CurMode = 'C';
-            BCode[BInd] = 99;
-            ++BInd;
-          }
-          //Добавить символ режима С
-          BCode[BInd] = ch.digitValue()*10 + ch2.digitValue();
-          ++BInd;
-        } else {
-          if (BInd == 0) {
-            if (ch < ' ') {
-              //Начало с режима A
-              CurMode = 'A';
-              BCode[BInd] = 103;
-              ++BInd;
-            } else {
-              //Начало с режима B
-              CurMode = 'B';
-              BCode[BInd] = 104;
-              ++BInd;
+    while (ind < srcLength)
+    {
+
+        if (tableB)
+        {
+            if ((ind == 0) || (ind + 3 == srcLength-1))
+            {
+                mini = 4;
             }
-          }
-          //Переключение по надобности в режим A
-          if ((ch < ' ') && (CurMode != 'A')) {
-            CurMode = 'A';
-            BCode[BInd] = 101;
-            ++BInd;
-          //Переключение по надобности в режим B
-          } else if ((('@' <= ch) && (CurMode != 'B')) || (CurMode == 'C')) {
-            CurMode = 'B';
-            BCode[BInd] = 100;
-            ++BInd;
-          }
-          //Служебные символы
-          if (ch < ' ') {
-            BCode[BInd] = ch.unicode() + 64;
-            ++BInd;
-          //Все другие символы
-          } else {
-            BCode[BInd] = ch.unicode() - 32;
-            ++BInd;
-          }
+            else
+            {
+                mini = 6;
+            }
+
+            mini = mini - 1;
+
+            if ((ind + mini) <= srcLength - 1)
+            {
+                while (mini >= 0)
+                {
+                    if ((src[ind + mini].unicode() < 48) || (src[ind + mini].unicode() > 57))
+                    {
+                        break;
+                    }
+                    mini = mini - 1;
+                }
+            }
+
+
+            if (mini < 0)
+            {
+                if (ind == 0)
+                {
+                    code128 = QChar((char) 205);
+
+                }
+                else
+                {
+                    code128.append(QChar((char)199));
+
+                }
+                tableB = false;
+            }
+            else
+            {
+
+                if (ind == 0)
+                {
+                    code128 = QChar((char) 204);
+                }
+            }
         }
-      }
+
+        if (tableB == false)
+        {
+            mini = 2;
+            mini = mini - 1;
+            if (ind + mini < srcLength)
+            {
+                while (mini >= 0)
+                {
+
+                    if (((src[ind + mini]) < 48) || ((src[ind]) > 57))
+                    {
+                        break;
+                    }
+                    mini = mini - 1;
+                }
+            }
+            if (mini < 0)
+            {
+                dummy = src.mid(ind, 2).toInt();
+
+                if (dummy < 95)
+                {
+                    dummy = dummy + 32;
+                } else
+                {
+                    dummy = dummy + 100;
+                }
+                code128 = code128 + (char)(dummy);
+
+                ind = ind + 2;
+            }
+            else
+            {
+                code128.append(QChar((char) 200));
+                tableB = true;
+            }
+        }
+        if (tableB == true)
+        {
+
+            code128 = code128 + src[ind];
+            ind = ind + 1;
+        }
     }
 
-    //Подсчитываем контрольную сумму
-    CCode = BCode[0] % 103;
-    for (i = 1; i < BInd; ++i) {
-        CCode = (CCode + BCode[i] * i) % 103;
+    for (ind = 0; ind < code128.length(); ind++)
+    {
+        dummy = code128[ind].unicode();
+        if (dummy < 127)
+        {
+            dummy = dummy - 32;
+        }
+        else
+        {
+            dummy = dummy - 100;
+        }
+        if (ind == 0)
+        {
+            checksum = dummy;
+        }
+        checksum = (checksum + (ind) * dummy) % 103;
     }
-    BCode[BInd] = CCode;
-    ++BInd;
-    //Завершающий символ
-    BCode[BInd++] = 106;
-    ++BInd;
-    //Собираем строку символов шрифта
-    QString Result;
-    for (i = 0; i < BInd; ++i) {
-      Result.append(BarArray[BCode[i]]);
+
+    if (checksum < 95)
+    {
+        checksum = checksum + 32;
     }
-    return Result;
+    else
+    {
+        checksum = checksum + 100;
+    }
+    code128.append(QChar((char) checksum));
+
+    return code128;
+
+}
+
+ushort valChar(const QChar& c) {
+    ushort code = c.unicode();
+    if (32 <= code && code <= 126) return code - 32;
+    if (195 <= code && code <= 211) return code - 100;
+    return 0;
+}
+
+const int tblC128[] = {
+    0x019B,    0x01B3,    0x0333,    0x00C9,    0x0189,    0x0191,
+    0x0099,    0x0119,    0x0131,    0x0093,    0x0113,    0x0123,
+    0x01CD,    0x01D9,    0x0399,    0x019D,    0x01B9,    0x0339,
+    0x0273,    0x01D3,    0x0393,    0x013B,    0x0173,    0x03B7,
+    0x0197,    0x01A7,    0x0327,    0x0137,    0x0167,    0x0267,
+    0x00DB,    0x031B,    0x0363,    0x00C5,    0x00D1,    0x0311,
+    0x008D,    0x00B1,    0x0231,    0x008B,    0x00A3,    0x0223,
+    0x00ED,    0x038D,    0x03B1,    0x00DD,    0x031D,    0x0371,
+    0x0377,    0x038B,    0x03A3,    0x00BB,    0x023B,    0x03BB,
+    0x00D7,    0x0317,    0x0347,    0x00B7,    0x0237,    0x02C7,
+    0x02F7,    0x0213,    0x028F,    0x0065,    0x0185,    0x0069,
+    0x0309,    0x01A1,    0x0321,    0x004D,    0x010D,    0x0059,
+    0x0219,    0x0161,    0x0261,    0x0243,    0x0053,    0x02EF,
+    0x0143,    0x02F1,    0x01E5,    0x01E9,    0x03C9,    0x013D,
+    0x0179,    0x0279,    0x012F,    0x014F,    0x024F,    0x03DB,
+    0x037B,    0x036F,    0x00F5,    0x03C5,    0x03D1,    0x00BD,
+    0x023D,    0x00AF,    0x022F,    0x03DD,    0x03BD,    0x03D7,
+    0x03AF,    0x010B,    0x004B,    0x01CB,    0x1AE3};
+
+#include <QDebug>
+
+void dessineBloc(qint32 Data, QPainter& painter, QPointF& point, qreal H, int Mul, int Nb)
+{
+    int i, N;
+    QPointF newPoint = point;
+    bool B1 = Data%2 == 1;
+    QRectF Rec;
+
+    i = 0;
+    while (i < Nb) {
+        N = i;
+        do {
+            ++i;
+            Data >>= 1;
+        } while ((i < Nb) && (B1 == (Data%2 == 1)));
+        N = i - N;
+        B1 = !B1;
+        Rec.setLeft(newPoint.x());
+        newPoint.setX(newPoint.x() + N*Mul);
+        Rec.setRight(newPoint.x());
+        Rec.setTop(newPoint.y());
+        Rec.setBottom(newPoint.y() + H);
+        if (!B1) {
+            painter.fillRect(Rec, painter.brush());
+        }
+    }
+    point = newPoint;
+}
+
+void Code128::drawBarcode(const QString &src, QPainter& painter, const QPointF& point, qreal H) {
+    QPointF startPoint = point;
+    qDebug() << "height" << H;
+    qDebug() << "startPoint" << startPoint;
+    QString res = encodeToCode128(src);
+    for (int i = 0; i < res.length(); ++i) {
+        dessineBloc(tblC128[valChar(res.at(i))], painter, startPoint, H, H/20, 11);
+    }
+    dessineBloc(0x1AE3, painter, startPoint, H, H/20, 13);
+    qDebug() << "endPoint" << startPoint;
+
 }

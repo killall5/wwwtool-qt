@@ -49,8 +49,6 @@ void MainMenu::saveGame()
 
 void MainMenu::printBlanks()
 {
-    QFont barcodeFont = QFont("Code 128", 20, QFont::Normal);
-
     QPrinter printer(QPrinter::HighResolution);
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setOutputFileName("/Users/mirror/Desktop/blank.pdf");
@@ -58,8 +56,8 @@ void MainMenu::printBlanks()
     const int COLS=3;
     const int ROWS=4;
 
-    const int commandsCount = 2;
-    const int questionCount = 10;
+    const int commandsCount = 1;
+    const int questionCount = 1;
 
 
     QPainter painter;
@@ -77,9 +75,10 @@ void MainMenu::printBlanks()
 
     int pagesCount = ceil(questionCount*1.0/COLS/ROWS);
     QFont questionFont = painter.font();
-    qreal ratio = cellWidth/2 / painter.fontMetrics().boundingRect(QString("%1").arg(questionCount)).size().width();
+    qreal ratio = cellHeight/2 / painter.fontMetrics().boundingRect(QString("%1").arg(questionCount)).size().height();
     questionFont.setPointSizeF(questionFont.pointSizeF()*ratio);
 
+    painter.setBrush(QBrush(Qt::SolidPattern));
 
     QString commandName = "Длинное название";
     for (int command=0; command < commandsCount; ++command) {
@@ -107,14 +106,14 @@ void MainMenu::printBlanks()
                     painter.drawText(col*cellWidth + cellWidth/20, row*cellHeight + cellHeight/20, cellWidth*0.95, cellHeight*0.95, Qt::AlignTop, commandName);
                     QRect bounds = painter.fontMetrics().boundingRect(commandName);
 
-                    painter.setFont(barcodeFont);
-                    QString code128 = Code128::encodeToCode128(QString("98736820124345332442"));
-                    qDebug() << code128;
-                    painter.drawText(col*cellWidth + cellWidth/20, row*cellHeight + cellHeight/20 + bounds.size().height(), cellWidth*0.95, cellHeight*0.95, Qt::AlignTop, code128);
+                    QPointF start(col*cellWidth + cellWidth/20, row*cellHeight + cellHeight/20 + bounds.size().height());
+                    if (q <= questionCount) {
+                        Code128::drawBarcode("Wikipedia", painter, start, bounds.size().height());
 
-                    painter.setPen(questionPen);
-                    painter.setFont(questionFont);
-                    painter.drawText(col*cellWidth, row*cellHeight, cellWidth, cellHeight, Qt::AlignCenter, QString("%1").arg(q));
+                        painter.setPen(questionPen);
+                        painter.setFont(questionFont);
+                        painter.drawText(col*cellWidth, row*cellHeight, cellWidth, cellHeight, Qt::AlignCenter, QString("%1").arg(q));
+                    }
                 }
             }
 
