@@ -1,5 +1,6 @@
 #include <QApplication>
 #include "mainwindow.h"
+#include <QDebug>
 
 #ifdef Q_OS_MAC
 #include "mainmenu.h"
@@ -14,6 +15,6 @@ int main(int argc, char *argv[])
 #endif
     MainWindow *w = new MainWindow;
     w->show();
-    
+
     return a.exec();
 }

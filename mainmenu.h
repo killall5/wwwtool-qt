@@ -14,6 +14,7 @@ signals:
 public slots:
     void newGame();
     void saveGame();
+    void printBlanks();
 
 private:
 

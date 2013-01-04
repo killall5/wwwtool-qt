@@ -4,18 +4,21 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = wwwtool-qt
 TEMPLATE = app
 
+CONFIG += silent
 
 SOURCES += main.cpp\
     mainmenu.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    code128.cpp
 
 HEADERS  += \
     mainmenu.h \
-    mainwindow.h
+    mainwindow.h \
+    code128.h
