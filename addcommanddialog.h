@@ -16,16 +16,10 @@ class AddCommandDialog : public QDialog
 public:
     explicit AddCommandDialog(GameModel *model, QWidget *parent = 0);
     ~AddCommandDialog();
-    
+
 private:
     QLineEdit *nameEdit;
     QLabel *nameLabel;
-
-    QLineEdit *tableEdit;
-    QLabel *tableLabel;
-    QIntValidator *tableValidator;
-
-    QCheckBox *useFreeTableCheckBox;
 
     QDialogButtonBox *buttonBox;
 
@@ -33,7 +27,6 @@ private:
 
 public slots:
     void addCommand();
-    void fillFields();
 
 };
 

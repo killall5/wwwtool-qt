@@ -1,6 +1,10 @@
 #include <QApplication>
 #include "mainwindow.h"
 #include <QDebug>
+#include <QVector>
+#include <QString>
+
+#include <QCryptographicHash>
 
 int main(int argc, char *argv[])
 {

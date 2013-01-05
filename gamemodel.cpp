@@ -17,24 +17,17 @@ GameModel::GameModel(QObject *parent) :
     m_questionCount = 0;
 }
 
-qint32 GameModel::getFreeTable()
-{
-    if (m_useFreeTable)
-        return m_commands.count()+1;
-    return 10;
-}
-
 #include <QDebug>
 
-void GameModel::addCommand(const QString& commandName, const qint32 tableNumber)
+void GameModel::addCommand(const QString& commandName)
 {
-    if (m_commands.contains(tableNumber)) {
-        QException().raise();
-    }
+//    if (m_commands.indexOf(commandName) != -1)
+//        QException().raise();
+//    }
 
     QModelIndex index;
-    beginInsertRows(index, m_commands.count(), m_commands.count());
-    m_commands[tableNumber] = new CommandModel(commandName);
+    beginInsertRows(index, m_commands.size(), m_commands.size());
+    m_commands.push_back(new CommandModel(commandName));
     endInsertRows();
 }
 
@@ -72,7 +65,7 @@ QVariant GameModel::data(const QModelIndex &index, int role) const
 
     switch (index.column()) {
     case 0:
-        return QString("Команда %1").arg(index.row());
+        return m_commands[index.row()]->commandName();
     case 1:
         return QString("0/0");
     }

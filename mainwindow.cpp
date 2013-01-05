@@ -181,13 +181,13 @@ void MainWindow::printBlanks()
 
                     QRectF barcodeRect(col*cellWidth + cellWidth/4, (row+1)*cellHeight - cellHeight/20 - cellWidth/6, cellWidth/2, cellWidth/6);
                     if (q <= questionCount) {
-                        Code128::drawBarcode("0-0-0", painter, barcodeRect);
+                        Code128::drawBarcode("d8f45903ASDF", painter, barcodeRect);
 
                         painter.setPen(questionPen);
                         painter.setFont(questionFont);
                         painter.drawText(col*cellWidth, row*cellHeight + cellHeight/20 + bounds.height(), cellWidth, barcodeRect.top() - (row*cellHeight + cellHeight/20 + bounds.height()), Qt::AlignCenter, QString("%1").arg(q));
                     } else {
-                        Code128::drawBarcode("0-0-0", painter, barcodeRect);
+                        Code128::drawBarcode("Wikipedia", painter, barcodeRect);
                     }
                 }
             }
