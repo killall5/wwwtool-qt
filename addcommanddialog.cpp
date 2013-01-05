@@ -8,6 +8,9 @@ AddCommandDialog::AddCommandDialog(GameModel *model, QWidget *parent) :
     nameLabel = new QLabel(tr("Название"));
     nameEdit = new QLineEdit;
 
+    errorLabel = new QLabel;
+    errorLabel->setVisible(false);
+
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(close()));
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(addCommand()));
@@ -15,7 +18,8 @@ AddCommandDialog::AddCommandDialog(GameModel *model, QWidget *parent) :
     QGridLayout *mainLayout = new QGridLayout();
     mainLayout->addWidget(nameLabel, 0, 0);
     mainLayout->addWidget(nameEdit, 0, 1);
-    mainLayout->addWidget(buttonBox, 1, 0, 1, 2);
+    mainLayout->addWidget(errorLabel, 1, 0, 1, 2);
+    mainLayout->addWidget(buttonBox, 2, 0, 1, 2);
 
     setLayout(mainLayout);
     setModal(true);
@@ -30,14 +34,14 @@ AddCommandDialog::~AddCommandDialog()
     delete buttonBox;
 }
 
-#include <QDebug>
-
 void AddCommandDialog::addCommand()
 {
     try {
         m_model->addCommand(nameEdit->text());
+        errorLabel->setVisible(false);
         nameEdit->clear();
     } catch (QException &e) {
-        qDebug() << "catched" << e.what();
+        errorLabel->setText(tr("Команда с таким названием уже существует"));
+        errorLabel->setVisible(true);
     }
 }

@@ -21,6 +21,8 @@ private:
     QLineEdit *nameEdit;
     QLabel *nameLabel;
 
+    QLabel *errorLabel;
+
     QDialogButtonBox *buttonBox;
 
     GameModel * const m_model;

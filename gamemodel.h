@@ -4,6 +4,7 @@
 #include <QAbstractTableModel>
 #include <QString>
 #include <QMap>
+#include <QPrinter>
 
 class CommandModel;
 
@@ -20,15 +21,18 @@ public:
 
     void addCommand(const QString& commandName);
 
-    qint32 questionCount() { return m_questionCount; }
+    quint32 questionCount() { return m_questionCount; }
 signals:
     
 public slots:
-    void setQuestionCount(qint32 questionCount);
+    void setQuestionCount(quint32 questionCount);
+    void printBlanks(QPrinter *printer) const;
 
 private:
     QList<CommandModel*> m_commands;
-    qint32 m_questionCount;
+    quint32 m_questionCount;
+
+    QString toBarcodeText(quint32 hash, quint32 question = 0) const;
 };
 
 #endif // GAMEMODEL_H
