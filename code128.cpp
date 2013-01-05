@@ -172,9 +172,7 @@ const int tblC128[] = {
     0x023D,    0x00AF,    0x022F,    0x03DD,    0x03BD,    0x03D7,
     0x03AF,    0x010B,    0x004B,    0x01CB,    0x1AE3};
 
-#include <QDebug>
-
-void dessineBloc(qint32 Data, QPainter& painter, QPointF& point, qreal H, int Mul, int Nb)
+void dessineBloc(qint32 Data, QPainter& painter, QPointF& point, qreal H, qreal Mul, int Nb)
 {
     int i, N;
     QPointF newPoint = point;
@@ -202,15 +200,13 @@ void dessineBloc(qint32 Data, QPainter& painter, QPointF& point, qreal H, int Mu
     point = newPoint;
 }
 
-void Code128::drawBarcode(const QString &src, QPainter& painter, const QPointF& point, qreal H) {
-    QPointF startPoint = point;
-    qDebug() << "height" << H;
-    qDebug() << "startPoint" << startPoint;
+void Code128::drawBarcode(const QString &src, QPainter& painter, const QRectF& rect) {
     QString res = encodeToCode128(src);
+    // barcode stroke width
+    qreal Mul = rect.width()/(11*res.length() + 13);
+    QPointF startPoint = rect.topLeft();
     for (int i = 0; i < res.length(); ++i) {
-        dessineBloc(tblC128[valChar(res.at(i))], painter, startPoint, H, H/20, 11);
+        dessineBloc(tblC128[valChar(res.at(i))], painter, startPoint, rect.height(), Mul, 11);
     }
-    dessineBloc(0x1AE3, painter, startPoint, H, H/20, 13);
-    qDebug() << "endPoint" << startPoint;
-
+    dessineBloc(0x1AE3, painter, startPoint, rect.height(), Mul, 13);
 }

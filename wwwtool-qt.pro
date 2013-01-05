@@ -14,11 +14,17 @@ TEMPLATE = app
 CONFIG += silent
 
 SOURCES += main.cpp\
-    mainmenu.cpp \
     mainwindow.cpp \
-    code128.cpp
+    code128.cpp \
+    addcommanddialog.cpp \
+    gamemodel.cpp \
+    questioncountdialog.cpp
 
 HEADERS  += \
-    mainmenu.h \
     mainwindow.h \
-    code128.h
+    code128.h \
+    addcommanddialog.h \
+    gamemodel.h \
+    questioncountdialog.h
+
+FORMS +=

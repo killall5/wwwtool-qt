@@ -6,7 +6,7 @@
 
 namespace Code128 {
 
-    void drawBarcode(const QString &src, QPainter& painter, const QPointF& point, qreal H);
+    void drawBarcode(const QString &src, QPainter& painter, const QRectF &rect);
 
 }
 
