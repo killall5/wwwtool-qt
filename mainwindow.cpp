@@ -1,8 +1,5 @@
 #include "mainwindow.h"
-#include <QTableWidget>
-#include <QTableView>
 #include <QtDebug>
-#include <QAction>
 #include <QMenuBar>
 #include <QFileDialog>
 #include "addcommanddialog.h"
@@ -20,7 +17,7 @@ void MainWindow::init()
 
     m_model = new GameModel(this);
 
-    QTableView *gameTable = new QTableView(this);
+    gameTable = new QTableView(this);
     gameTable->setModel(m_model);
 
     setCentralWidget(gameTable);
@@ -28,6 +25,17 @@ void MainWindow::init()
     createActions();
     createMenus();
     resize(700, 500);
+
+    kpe = new KeyPressEater(this);
+    gameTable->installEventFilter(kpe);
+}
+
+MainWindow::~MainWindow()
+{
+    gameTable->removeEventFilter(kpe);
+    delete kpe;
+    delete gameTable;
+    delete m_model;
 }
 
 void MainWindow::createActions()
@@ -130,4 +138,9 @@ void MainWindow::questionCount()
 {
     QuestionCountDialog dialog(m_model, this);
     dialog.exec();
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << "pressed " << event->key();
 }

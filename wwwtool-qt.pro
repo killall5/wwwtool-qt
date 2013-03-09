@@ -18,13 +18,15 @@ SOURCES += main.cpp\
     code128.cpp \
     addcommanddialog.cpp \
     gamemodel.cpp \
-    questioncountdialog.cpp
+    questioncountdialog.cpp \
+    keypresseater.cpp
 
 HEADERS  += \
     mainwindow.h \
     code128.h \
     addcommanddialog.h \
     gamemodel.h \
-    questioncountdialog.h
+    questioncountdialog.h \
+    keypresseater.h
 
 FORMS +=
