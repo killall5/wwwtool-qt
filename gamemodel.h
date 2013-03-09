@@ -22,6 +22,7 @@ public:
     void addCommand(const QString& commandName);
 
     quint32 questionCount() { return m_questionCount; }
+    bool save(QString fileName);
 signals:
     
 public slots:

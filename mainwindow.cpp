@@ -106,7 +106,11 @@ void MainWindow::loadGame()
 
 void MainWindow::saveGame()
 {
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save game"), QString(), tr("WWWTool game (*.wg)"));
 
+    if (fileName.isEmpty()) return;
+
+    m_model->save(fileName);
 }
 
 void MainWindow::printBlanks()

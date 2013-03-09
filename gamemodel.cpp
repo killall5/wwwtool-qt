@@ -3,6 +3,8 @@
 #include <QCryptographicHash>
 #include <QDebug>
 #include <QPainter>
+#include <QFile>
+#include <QXmlStreamWriter>
 #include <cmath>
 #include "code128.h"
 
@@ -23,7 +25,14 @@ public:
 
     QString commandName() const { return m_commandName; }
     quint32 commandNameHash() const { return m_commandNameHash; }
-    QVector<bool> m_answers;
+
+    enum CommandAnswer {
+        ANSWER_UNKNOWN = 0,
+        ANSWER_RIGHT,
+        ANSWER_WRONG
+    };
+
+    QVector<CommandAnswer> m_answers;
 private:
     QString m_commandName;
     quint32 m_commandNameHash;
@@ -52,7 +61,9 @@ void GameModel::addCommand(const QString& commandName)
 
     QModelIndex index;
     beginInsertRows(index, m_commands.size(), m_commands.size());
-    m_commands.push_back(new CommandModel(commandName));
+    CommandModel *command = new CommandModel(commandName);
+    command->m_answers.resize(m_questionCount);
+    m_commands.push_back(command);
     endInsertRows();
 }
 
@@ -68,7 +79,9 @@ void GameModel::setQuestionCount(quint32 questionCount)
         m_questionCount = questionCount;
         endInsertColumns();
     }
-
+    for (int i = 0; i < m_commands.length(); ++i) {
+        m_commands[i]->m_answers.resize(questionCount);
+    }
 }
 
 int GameModel::rowCount(const QModelIndex &parent) const
@@ -121,6 +134,9 @@ void GameModel::printBlanks(QPrinter *printer) const
 {
     const quint32 COLS=3;
     const quint32 ROWS=4;
+
+    QPagedPaintDevice::Margins m = {15, 15, 15, 15};
+    printer->setMargins(m);
 
     QPainter painter(printer);
 
@@ -205,4 +221,41 @@ QString GameModel::toBarcodeText(quint32 hash, quint32 question) const
 {
     quint64 res = (quint64)hash << 32 | question;
     return QString("%1").arg(res, 20, 10, QLatin1Char('0'));
+}
+
+bool GameModel::save(QString fileName) {
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument();
+
+    xmlWriter.writeStartElement("WWWTool");
+
+    xmlWriter.writeStartElement("Options");
+    xmlWriter.writeTextElement("QuestionCount", QString("%1").arg(m_questionCount));
+    xmlWriter.writeEndElement();
+
+    xmlWriter.writeStartElement("Commands");
+    for (int i = 0; i != m_commands.length(); ++i) {
+        CommandModel *command = m_commands[i];
+        xmlWriter.writeStartElement("Command");
+        xmlWriter.writeTextElement("Name", command->commandName());
+        for (quint32 q = 0; q < m_questionCount; ++q) {
+            if (command->m_answers[q] != CommandModel::ANSWER_UNKNOWN) {
+                xmlWriter.writeStartElement("Question");
+                xmlWriter.writeAttribute("number", QString("%1").arg(q+1));
+                xmlWriter.writeAttribute("value", QString("%1").arg(command->m_answers[q]));
+                xmlWriter.writeEndElement();
+            }
+        }
+        xmlWriter.writeEndElement();
+    }
+    xmlWriter.writeEndElement();
+
+    xmlWriter.writeEndDocument();
+
+    file.close();
+    return !xmlWriter.hasError();
 }
