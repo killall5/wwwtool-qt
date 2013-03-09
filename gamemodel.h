@@ -23,6 +23,7 @@ public:
 
     quint32 questionCount() { return m_questionCount; }
     bool save(QString fileName);
+    bool load(QString fileName);
 signals:
     
 public slots:

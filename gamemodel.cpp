@@ -106,6 +106,13 @@ QVariant GameModel::data(const QModelIndex &index, int role) const
         return m_commands[index.row()]->commandName();
     case 1:
         return QString("0/0");
+    default:
+        switch (m_commands[index.row()]->m_answers[index.column()-2]) {
+        case CommandModel::ANSWER_RIGHT:
+            return QString("+");
+        case CommandModel::ANSWER_WRONG:
+            return QString("–");
+        }
     }
 
     return QVariant();
@@ -227,35 +234,94 @@ bool GameModel::save(QString fileName) {
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
 
-    QXmlStreamWriter xmlWriter(&file);
-    xmlWriter.setAutoFormatting(true);
-    xmlWriter.writeStartDocument();
+    QXmlStreamWriter xml(&file);
+    xml.setAutoFormatting(true);
+    xml.writeStartDocument();
 
-    xmlWriter.writeStartElement("WWWTool");
+    xml.writeStartElement("WWWTool");
 
-    xmlWriter.writeStartElement("Options");
-    xmlWriter.writeTextElement("QuestionCount", QString("%1").arg(m_questionCount));
-    xmlWriter.writeEndElement();
+    xml.writeStartElement("Options");
+    xml.writeTextElement("QuestionCount", QString("%1").arg(m_questionCount));
+    xml.writeEndElement();
 
-    xmlWriter.writeStartElement("Commands");
+    xml.writeStartElement("Commands");
     for (int i = 0; i != m_commands.length(); ++i) {
         CommandModel *command = m_commands[i];
-        xmlWriter.writeStartElement("Command");
-        xmlWriter.writeTextElement("Name", command->commandName());
+        xml.writeStartElement("Command");
+        xml.writeTextElement("Name", command->commandName());
         for (quint32 q = 0; q < m_questionCount; ++q) {
             if (command->m_answers[q] != CommandModel::ANSWER_UNKNOWN) {
-                xmlWriter.writeStartElement("Question");
-                xmlWriter.writeAttribute("number", QString("%1").arg(q+1));
-                xmlWriter.writeAttribute("value", QString("%1").arg(command->m_answers[q]));
-                xmlWriter.writeEndElement();
+                xml.writeStartElement("Question");
+                xml.writeAttribute("number", QString("%1").arg(q+1));
+                xml.writeAttribute("value", QString("%1").arg(command->m_answers[q]));
+                xml.writeEndElement();
             }
         }
-        xmlWriter.writeEndElement();
+        xml.writeEndElement();
     }
-    xmlWriter.writeEndElement();
+    xml.writeEndElement();
 
-    xmlWriter.writeEndDocument();
+    xml.writeEndDocument();
 
     file.close();
-    return !xmlWriter.hasError();
+    return !xml.hasError();
+}
+
+bool GameModel::load(QString fileName) {
+    QFile file(fileName);
+    file.open(QIODevice::ReadOnly);
+
+    QXmlStreamReader xml(&file);
+    // Read this:
+    //  http://www.developer.nokia.com/Community/Wiki/QXmlStreamReader_to_parse_XML_in_Qt
+
+    quint32 l_questionCount = 0;
+    QList<CommandModel *> l_commands;
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if (token == QXmlStreamReader::StartDocument) {
+            continue;
+        }
+
+        if (token == QXmlStreamReader::StartElement) {
+            if (xml.name() == "QuestionCount") {
+                xml.readNext();
+                l_questionCount = xml.text().toString().toInt() ;
+            }
+            if (xml.name() == "Command") {
+                CommandModel *command = new CommandModel;
+                while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "Command")) {
+                    if (xml.tokenType() == QXmlStreamReader::StartElement) {
+                        if (xml.name() == "Name") {
+                            xml.readNext();
+                            command->setCommandName(xml.text().toString());
+                        } else if (xml.name() == "Question") {
+                            QXmlStreamAttributes attr = xml.attributes();
+                            if (attr.hasAttribute("number") && attr.hasAttribute("value")) {
+                                int value = attr.value("value").toString().toInt();
+                                int q = attr.value("number").toString().toInt();
+
+                                command->m_answers.resize(qMax(command->m_answers.size(), q));
+                                command->m_answers[q-1] = static_cast<CommandModel::CommandAnswer>(value);
+                            }
+
+                        }
+                    }
+                    xml.readNext();
+                }
+                l_commands.append(command);
+            }
+        }
+    }
+
+    if (xml.hasError()) {
+        return false;
+    }
+
+    beginResetModel();
+    m_commands.swap(l_commands);
+    endResetModel();
+
+    setQuestionCount(l_questionCount);
+    return true;
 }
