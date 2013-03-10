@@ -28,13 +28,16 @@ signals:
     
 public slots:
     void setQuestionCount(quint32 questionCount);
+    void click(int col, int row);
     void printBlanks(QPrinter *printer) const;
+    void readFromScanner(const QString& text);
 
 private:
     QList<CommandModel*> m_commands;
     quint32 m_questionCount;
 
     QString toBarcodeText(quint32 hash, quint32 question = 0) const;
+    bool fromBarcodeText(const QString& text, quint32 *hash, quint32 *question) const;
 };
 
 #endif // GAMEMODEL_H

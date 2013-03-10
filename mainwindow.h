@@ -15,8 +15,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     
-protected:
-    void keyPressEvent(QKeyEvent *);
 private:
     GameModel *m_model;
 
@@ -49,6 +47,8 @@ public slots:
     void deleteCommand();
 
     void questionCount();
+
+    void keyPressEvent(QKeyEvent *);
 };
 
 #endif // MAINWINDOW_H

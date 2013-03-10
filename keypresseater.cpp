@@ -1,11 +1,18 @@
 #include "keypresseater.h"
 
-#include <QKeyEvent>
 #include <QDebug>
 
 KeyPressEater::KeyPressEater(QObject *parent) :
     QObject(parent)
 {
+    timer = new QTimer(this);
+    timer->setSingleShot(true);
+    connect(timer, SIGNAL(timeout()), this, SLOT(timerFinished()));
+}
+
+KeyPressEater::~KeyPressEater() {
+    timer->stop();
+    delete timer;
 }
 
 bool KeyPressEater::eventFilter(QObject *obj, QEvent *event)
@@ -15,6 +22,18 @@ bool KeyPressEater::eventFilter(QObject *obj, QEvent *event)
     }
 
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-    qDebug() << "Ate key press" << keyEvent->text() << keyEvent->isAutoRepeat();
+    //emit keyPressed(keyEvent);
+    if (keyEvent->key() == Qt::Key_Return) {
+        timer->stop();
+        timerFinished();
+    } else {
+        scannedText += keyEvent->text();
+        timer->start(500);
+    }
     return true;
+}
+
+void KeyPressEater::timerFinished() {
+    emit textHaveBeenScanned(scannedText);
+    scannedText.clear();
 }

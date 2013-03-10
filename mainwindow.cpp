@@ -18,6 +18,7 @@ void MainWindow::init()
     m_model = new GameModel(this);
 
     gameTable = new QTableView(this);
+    //gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
     gameTable->setModel(m_model);
 
     setCentralWidget(gameTable);
@@ -27,6 +28,8 @@ void MainWindow::init()
     resize(700, 500);
 
     kpe = new KeyPressEater(this);
+//    connect(kpe, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressEvent(QKeyEvent*)));
+    connect(kpe, SIGNAL(textHaveBeenScanned(QString)), m_model, SLOT(readFromScanner(QString)));
     gameTable->installEventFilter(kpe);
 }
 
@@ -150,5 +153,8 @@ void MainWindow::questionCount()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    qDebug() << "pressed " << event->key();
+    QModelIndexList s = gameTable->selectionModel()->selection().indexes();
+    if (event->key() == 32 && !s.empty()) {
+        m_model->click(s.begin()->column(), s.begin()->row());
+    }
 }

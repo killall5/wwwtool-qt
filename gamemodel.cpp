@@ -140,9 +140,9 @@ QVariant GameModel::headerData(int section, Qt::Orientation orientation, int rol
 void GameModel::printBlanks(QPrinter *printer) const
 {
     const quint32 COLS=3;
-    const quint32 ROWS=4;
+    const quint32 ROWS=5;
 
-    QPagedPaintDevice::Margins m = {15, 15, 15, 15};
+    QPagedPaintDevice::Margins m = {5, 5, 5, 5};
     printer->setMargins(m);
 
     QPainter painter(printer);
@@ -228,6 +228,17 @@ QString GameModel::toBarcodeText(quint32 hash, quint32 question) const
 {
     quint64 res = (quint64)hash << 32 | question;
     return QString("%1").arg(res, 20, 10, QLatin1Char('0'));
+}
+
+bool GameModel::fromBarcodeText(const QString& text, quint32 *hash, quint32 *question) const {
+    //if (text.length() != 20)
+    //    return false;
+
+    bool ok = false;
+    quint64 res = text.toULongLong(&ok);
+    *hash = res >> 32;
+    *question = res;
+    return ok;
 }
 
 bool GameModel::save(QString fileName) {
@@ -324,4 +335,24 @@ bool GameModel::load(QString fileName) {
 
     setQuestionCount(l_questionCount);
     return true;
+}
+
+void GameModel::click(int col, int row) {
+    if (col > 1) {
+        CommandModel::CommandAnswer *a = &m_commands[row]->m_answers[col-2];
+        if (*a != CommandModel::ANSWER_RIGHT) {
+            *a = CommandModel::ANSWER_RIGHT;
+        } else {
+            *a = CommandModel::ANSWER_WRONG;
+        }
+        QModelIndex i = createIndex(row, col);
+        dataChanged(i, i);
+    }
+}
+
+void GameModel::readFromScanner(const QString &text) {
+    quint32 hash, q;
+    if (fromBarcodeText(text, &hash, &q)) {
+        qDebug() << "read from scanner" << text << ": hash=" << hash << "q=" << q;
+    }
 }
