@@ -8,12 +8,16 @@
 #include "keypresseater.h"
 #include "gamemodel.h"
 
-class MainWindow : public QMainWindow
+#include "scannermanager.h"
+
+class MainWindow : public QMainWindow, public ScannerManagerListener
 {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    void onTextScanned(const QString &);
     
 private:
     GameModel *m_model;
@@ -49,6 +53,7 @@ public slots:
     void questionCount();
 
     void keyPressEvent(QKeyEvent *);
+
 };
 
 #endif // MAINWINDOW_H

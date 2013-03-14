@@ -1,6 +1,7 @@
 #include "keypresseater.h"
 
 #include <QDebug>
+#include "scannermanager.h"
 
 KeyPressEater::KeyPressEater(QObject *parent) :
     QObject(parent)
@@ -34,6 +35,6 @@ bool KeyPressEater::eventFilter(QObject *obj, QEvent *event)
 }
 
 void KeyPressEater::timerFinished() {
-    emit textHaveBeenScanned(scannedText);
+    ScannerManager::instance()->textScanned(scannedText);
     scannedText.clear();
 }

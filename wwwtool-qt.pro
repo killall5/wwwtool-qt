@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     addcommanddialog.cpp \
     gamemodel.cpp \
     questioncountdialog.cpp \
-    keypresseater.cpp
+    keypresseater.cpp \
+    scannermanager.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -27,6 +28,7 @@ HEADERS  += \
     addcommanddialog.h \
     gamemodel.h \
     questioncountdialog.h \
-    keypresseater.h
+    keypresseater.h \
+    scannermanager.h
 
 FORMS +=

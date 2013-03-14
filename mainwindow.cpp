@@ -27,14 +27,15 @@ void MainWindow::init()
     createMenus();
     resize(700, 500);
 
+    ScannerManager::instance()->addListener(this);
     kpe = new KeyPressEater(this);
 //    connect(kpe, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressEvent(QKeyEvent*)));
-    connect(kpe, SIGNAL(textHaveBeenScanned(QString)), m_model, SLOT(readFromScanner(QString)));
     gameTable->installEventFilter(kpe);
 }
 
 MainWindow::~MainWindow()
 {
+    ScannerManager::instance()->removeListener(this);
     gameTable->removeEventFilter(kpe);
     delete kpe;
     delete gameTable;
@@ -91,8 +92,7 @@ void MainWindow::createMenus()
     QMenu *questionsMenu = menuBar()->addMenu("Вопросы");
     questionsMenu->addAction(questionCountAct);
 
-//    QMenu *help = menuBar()->addMenu(tr("Help"));
-
+    QMenu *help = menuBar()->addMenu(tr("Help"));
 
 }
 
@@ -157,4 +157,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     if (event->key() == 32 && !s.empty()) {
         m_model->click(s.begin()->column(), s.begin()->row());
     }
+}
+
+void MainWindow::onTextScanned(const QString &text)
+{
+    m_model->readFromScanner(text);
 }
