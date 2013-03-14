@@ -10,11 +10,11 @@
 
 class CommandModel {
 public:
-    CommandModel() {
+    CommandModel() : rightAnswersCount(0), rating(0) {
         updateHash();
     }
 
-    CommandModel(const QString& commandName) : m_commandName(commandName) {
+    CommandModel(const QString& commandName) : rightAnswersCount(0), rating(0), m_commandName(commandName) {
         updateHash();
     }
 
@@ -33,6 +33,8 @@ public:
     };
 
     QVector<CommandAnswer> m_answers;
+    quint32 rightAnswersCount;
+    quint32 rating;
 private:
     QString m_commandName;
     quint32 m_commandNameHash;
@@ -60,9 +62,19 @@ void GameModel::addCommand(const QString& commandName)
 //    }
 
     QModelIndex index;
-    beginInsertRows(index, m_commands.size(), m_commands.size());
     CommandModel *command = new CommandModel(commandName);
     command->m_answers.resize(m_questionCount);
+    // update ratings:
+    // for questions
+    for (quint32 i = 0; i < m_questionCount; ++i) {
+        m_questionRating[i]++;
+    }
+    // for commands
+    for (int i = 0; i < m_commands.size(); ++i) {
+        m_commands[i]->rating += m_commands[i]->rightAnswersCount;
+    }
+
+    beginInsertRows(index, m_commands.size(), m_commands.size());
     m_commands.push_back(command);
     endInsertRows();
 }
@@ -70,18 +82,39 @@ void GameModel::addCommand(const QString& commandName)
 void GameModel::setQuestionCount(quint32 questionCount)
 {
     QModelIndex index;
+    quint32 oldQC = m_questionCount;
     if (questionCount < m_questionCount) {
         beginRemoveColumns(index, questionCount, m_questionCount-1);
         m_questionCount = questionCount;
         endRemoveColumns();
+        for (int i = 0; i < m_commands.size(); ++i) {
+            bool changed = false;
+            for (quint32 q = m_questionCount; q < oldQC; ++q) {
+                if (m_commands[i]->m_answers[q] == CommandModel::ANSWER_RIGHT) {
+                    changed = true;
+                    m_commands[i]->rightAnswersCount--;
+                    m_commands[i]->rating -= m_questionRating[q];
+                }
+            }
+            if (changed) {
+                QModelIndex idx = createIndex(i, 1);
+                dataChanged(idx, idx);
+            }
+        }
     } else if (questionCount > m_questionCount) {
         beginInsertColumns(index, m_questionCount, questionCount-1);
         m_questionCount = questionCount;
         endInsertColumns();
+
+        m_questionRating.resize(m_questionCount);
+        for (quint32 q = oldQC; q < m_questionCount; ++q) {
+            m_questionRating[q] = m_commands.size() + 1;
+        }
     }
     for (int i = 0; i < m_commands.length(); ++i) {
         m_commands[i]->m_answers.resize(questionCount);
     }
+    // update results (rating + right answers count)
 }
 
 int GameModel::rowCount(const QModelIndex &parent) const
@@ -105,13 +138,15 @@ QVariant GameModel::data(const QModelIndex &index, int role) const
     case 0:
         return m_commands[index.row()]->commandName();
     case 1:
-        return QString("0/0");
+        return QString("%1/%2").arg(m_commands[index.row()]->rightAnswersCount).arg(m_commands[index.row()]->rating);
     default:
         switch (m_commands[index.row()]->m_answers[index.column()-2]) {
         case CommandModel::ANSWER_RIGHT:
             return QString("+");
         case CommandModel::ANSWER_WRONG:
             return QString("–");
+        default:
+            return QVariant();
         }
     }
 
@@ -132,6 +167,8 @@ QVariant GameModel::headerData(int section, Qt::Orientation orientation, int rol
         default:
             return QString("%1").arg(section-1);
         }
+    } else if (orientation == Qt::Vertical) {
+
     }
 
     return QVariant();
@@ -241,7 +278,7 @@ bool GameModel::fromBarcodeText(const QString& text, quint32 *hash, quint32 *que
     return ok;
 }
 
-bool GameModel::save(QString fileName) {
+bool GameModel::save(QString fileName) const {
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
 
@@ -276,6 +313,27 @@ bool GameModel::save(QString fileName) {
 
     file.close();
     return !xml.hasError();
+}
+
+void GameModel::exportResults(QString fileName) const {
+    QFile source("/Users/mirror/source.tht");
+    source.open(QIODevice::ReadOnly);
+    QByteArray templ = source.readAll();
+    source.close();
+
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+
+    QByteArray jsonResults = "[";
+    for (int i = 0; i < m_commands.size(); ++i) {
+        if (i) jsonResults += ",";
+        jsonResults += "{\"name\":\"" + m_commands[i]->commandName() + "\"}";
+    }
+    jsonResults += "]";
+
+    templ.replace(QString("{/*Results*/}"), jsonResults);
+    file.write(templ);
+    file.close();
 }
 
 bool GameModel::load(QString fileName) {
@@ -331,28 +389,79 @@ bool GameModel::load(QString fileName) {
 
     beginResetModel();
     m_commands.swap(l_commands);
-    endResetModel();
 
     setQuestionCount(l_questionCount);
+
+    for (quint32 q = 0; q < l_questionCount; ++q) {
+        m_questionRating[q] = 1;
+        for (int i = 0; i < m_commands.size(); ++i) {
+            if (m_commands[i]->m_answers[q] == CommandModel::ANSWER_RIGHT) {
+                m_commands[i]->rightAnswersCount++;
+            } else {
+                m_questionRating[q]++;
+            }
+        }
+
+        for (int i = 0; i < m_commands.size(); ++i) {
+            if (m_commands[i]->m_answers[q] == CommandModel::ANSWER_RIGHT) {
+                m_commands[i]->rating += m_questionRating[q];
+            }
+        }
+    }
+
+    endResetModel();
+
     return true;
 }
 
 void GameModel::click(int col, int row) {
     if (col > 1) {
-        CommandModel::CommandAnswer *a = &m_commands[row]->m_answers[col-2];
-        if (*a != CommandModel::ANSWER_RIGHT) {
-            *a = CommandModel::ANSWER_RIGHT;
-        } else {
-            *a = CommandModel::ANSWER_WRONG;
-        }
-        QModelIndex i = createIndex(row, col);
-        dataChanged(i, i);
+        invertCommandResult(row, col-2);
     }
 }
 
 void GameModel::readFromScanner(const QString &text) {
     quint32 hash, q;
     if (fromBarcodeText(text, &hash, &q)) {
-        qDebug() << "read from scanner" << text << ": hash=" << hash << "q=" << q;
+        for (int i = 0; i < m_commands.size(); ++i) {
+            if (m_commands[i]->commandNameHash() == hash) {
+                invertCommandResult(i, q-1);
+            }
+        }
+    }
+}
+
+void GameModel::invertCommandResult(int commandNumber, quint32 question) {
+    if (commandNumber < m_commands.size() && question < (quint32)m_commands[commandNumber]->m_answers.size()) {
+        CommandModel::CommandAnswer *a = &m_commands[commandNumber]->m_answers[question];
+        switch (*a) {
+        case CommandModel::ANSWER_RIGHT:
+            *a = CommandModel::ANSWER_WRONG;
+            m_commands[commandNumber]->rightAnswersCount--;
+            m_commands[commandNumber]->rating -= m_questionRating[question]++;
+            break;
+        case CommandModel::ANSWER_WRONG:
+        case CommandModel::ANSWER_UNKNOWN:
+            *a = CommandModel::ANSWER_RIGHT;
+            m_commands[commandNumber]->rightAnswersCount++;
+            m_commands[commandNumber]->rating += --m_questionRating[question];
+        }
+
+        QModelIndex i = createIndex(commandNumber, question+2);
+        dataChanged(i, i);
+        i = createIndex(commandNumber, 1);
+        dataChanged(i, i);
+
+        for (int c = 0; c < m_commands.size(); ++c) {
+            if (c != commandNumber && m_commands[c]->m_answers[question] == CommandModel::ANSWER_RIGHT) {
+                if (*a == CommandModel::ANSWER_RIGHT) {
+                    m_commands[c]->rating--;
+                } else {
+                    m_commands[c]->rating++;
+                }
+                i = createIndex(c, 1);
+                dataChanged(i, i);
+            }
+        }
     }
 }

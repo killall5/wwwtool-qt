@@ -23,13 +23,13 @@ bool KeyPressEater::eventFilter(QObject *obj, QEvent *event)
     }
 
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-    //emit keyPressed(keyEvent);
+    emit keyPressed(keyEvent);
     if (keyEvent->key() == Qt::Key_Return) {
         timer->stop();
         timerFinished();
     } else {
         scannedText += keyEvent->text();
-        timer->start(500);
+        timer->start(50);
     }
     return true;
 }

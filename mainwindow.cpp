@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include "addcommanddialog.h"
 #include "questioncountdialog.h"
+#include <QHeaderView>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -19,6 +20,7 @@ void MainWindow::init()
 
     gameTable = new QTableView(this);
     //gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
+   // gameTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     gameTable->setModel(m_model);
 
     setCentralWidget(gameTable);
@@ -29,7 +31,7 @@ void MainWindow::init()
 
     ScannerManager::instance()->addListener(this);
     kpe = new KeyPressEater(this);
-//    connect(kpe, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressEvent(QKeyEvent*)));
+    connect(kpe, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressEvent(QKeyEvent*)));
     gameTable->installEventFilter(kpe);
 }
 
@@ -73,6 +75,9 @@ void MainWindow::createActions()
     questionCountAct = new QAction(tr("Количество вопросов..."), this);
     questionCountAct->setShortcut(tr("Ctrl+E"));
     connect(questionCountAct, SIGNAL(triggered()), this, SLOT(questionCount()));
+
+    exportResultsAct = new QAction(tr("Экспорт результатов..."), this);
+    connect(exportResultsAct, SIGNAL(triggered()), this, SLOT(exportResults()));
 }
 
 void MainWindow::createMenus()
@@ -81,6 +86,7 @@ void MainWindow::createMenus()
     gameMenu->addAction(newGameAct);
     gameMenu->addAction(saveGameAct);
     gameMenu->addAction(loadGameAct);
+    gameMenu->addAction(exportResultsAct);
     gameMenu->addAction(closeGameAct);
     gameMenu->addSeparator();
     gameMenu->addAction(printBlanksAct);
@@ -93,7 +99,7 @@ void MainWindow::createMenus()
     questionsMenu->addAction(questionCountAct);
 
     QMenu *help = menuBar()->addMenu(tr("Help"));
-
+    Q_UNUSED(help);
 }
 
 void MainWindow::newGame()
@@ -118,6 +124,15 @@ void MainWindow::saveGame()
     if (fileName.isEmpty()) return;
 
     m_model->save(fileName);
+}
+
+void MainWindow::exportResults()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("HTML (*.html)"));
+
+    if (fileName.isEmpty()) return;
+
+    m_model->exportResults(fileName);
 }
 
 void MainWindow::printBlanks()

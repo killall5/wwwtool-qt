@@ -35,6 +35,8 @@ private:
     QAction *closeGameAct;
     QAction *printBlanksAct;
 
+    QAction *exportResultsAct;
+
     QAction *addCommandAct;
     QAction *deleteCommandAct;
 
@@ -46,6 +48,8 @@ public slots:
     void loadGame();
     void saveGame();
     void printBlanks();
+
+    void exportResults();
 
     void addCommand();
     void deleteCommand();
