@@ -131,6 +131,9 @@ int GameModel::columnCount(const QModelIndex &parent) const
 
 QVariant GameModel::data(const QModelIndex &index, int role) const
 {
+    if (index.column() > 1 && role == Qt::TextAlignmentRole) {
+        return Qt::AlignCenter;
+    }
     if (role != Qt::DisplayRole)
         return QVariant();
 
@@ -337,6 +340,8 @@ void GameModel::exportResults(QString fileName) const {
 }
 
 bool GameModel::load(QString fileName) {
+    setQuestionCount(0);
+
     QFile file(fileName);
     file.open(QIODevice::ReadOnly);
 

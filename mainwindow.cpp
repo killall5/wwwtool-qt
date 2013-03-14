@@ -20,7 +20,7 @@ void MainWindow::init()
 
     gameTable = new QTableView(this);
     //gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
-   // gameTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
 
     setCentralWidget(gameTable);
@@ -50,7 +50,7 @@ void MainWindow::createActions()
     newGameAct->setShortcut(QKeySequence::New);
     connect(newGameAct, SIGNAL(triggered()), this, SLOT(newGame()));
 
-    saveGameAct = new QAction(tr("Сохранить"), this);
+    saveGameAct = new QAction(tr("Сохранить..."), this);
     saveGameAct->setShortcut(QKeySequence::Save);
     connect(saveGameAct, SIGNAL(triggered()), this, SLOT(saveGame()));
 
