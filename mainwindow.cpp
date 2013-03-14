@@ -115,6 +115,8 @@ void MainWindow::loadGame()
     if (fileName.isEmpty()) return;
 
     m_model->load(fileName);
+    QFileInfo fileInfo(fileName);
+    setWindowTitle(fileInfo.baseName());
 }
 
 void MainWindow::saveGame()
@@ -124,6 +126,9 @@ void MainWindow::saveGame()
     if (fileName.isEmpty()) return;
 
     m_model->save(fileName);
+
+    QFileInfo fileInfo(fileName);
+    setWindowTitle(fileInfo.baseName());
 }
 
 void MainWindow::exportResults()

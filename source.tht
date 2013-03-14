@@ -1,0 +1,61 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+<style>
+td {
+  vertical-align: top;
+  background-color: white;
+  font-family: Arial;
+  font-size: 16pt;
+  font-weight: normal;
+  padding: 10pt;
+}
+body {
+  padding: 26pt;
+  margin: 0;
+  overflow: hidden;
+}
+td.ololo {
+  white-space: nowrap;
+  overflow: hidden;
+}
+</style>
+<p id="results"></p>
+<script>
+<!--
+  var Results = {/*Results*/};
+  var pos = 0;
+
+  function main() {
+
+    text = '<table cellspacing="1" cellpadding="2" width="100%">';
+    rows = Math.round(Math.min(28, Results.res.length - pos)/2);
+    for (var i=0; i < rows; i++) {
+      text += "<tr>";
+      text += '<td class="ololo" width="35%">' + Results.res[pos+i].n + '</td><td width="10%" align="center">' + Results.res[pos+i].a + '/' + Results.res[pos+i].r + '</td>';
+      text += "<td>&nbsp;</td>";
+      if (pos+rows+i < Results.res.length) {
+        text += '<td class="ololo" width="35%">' + Results.res[pos+rows+i].n + '</td><td width="10%" align="center">' + Results.res[pos+rows+i].a + '/' + Results.res[pos+rows+i].r + '</td>';
+      }
+      text += "</tr>"
+    }
+    pos = (pos + 2*rows) % Results.res.length;
+    text += '</table>';
+
+    document.getElementById('results').innerHTML = text;
+
+    setTimeout(function() { main(); }, 28000);
+  }
+
+  Results.res.sort(
+    function(x,y) {
+      return x.n.localeCompare(y.n);
+    }
+  );
+  main();
+//-->
+</script>
+</body>
+</html>

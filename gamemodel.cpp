@@ -327,12 +327,16 @@ void GameModel::exportResults(QString fileName) const {
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
 
-    QByteArray jsonResults = "[";
+    QByteArray jsonResults;
+    jsonResults.append(QString("{\"qc\":%1,\"res\":[").arg(m_questionCount));
     for (int i = 0; i < m_commands.size(); ++i) {
         if (i) jsonResults += ",";
-        jsonResults += "{\"name\":\"" + m_commands[i]->commandName() + "\"}";
+        jsonResults += "{"
+                "\"n\":\"" + m_commands[i]->commandName() + "\","
+                "\"r\":" + QString("%1").arg(m_commands[i]->rating) + ","
+                "\"a\":" + QString("%1").arg(m_commands[i]->rightAnswersCount) + "}";
     }
-    jsonResults += "]";
+    jsonResults += "]}";
 
     templ.replace(QString("{/*Results*/}"), jsonResults);
     file.write(templ);
