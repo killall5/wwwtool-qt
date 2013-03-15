@@ -271,8 +271,8 @@ QString GameModel::toBarcodeText(quint32 hash, quint32 question) const
 }
 
 bool GameModel::fromBarcodeText(const QString& text, quint32 *hash, quint32 *question) const {
-    //if (text.length() != 20)
-    //    return false;
+    if (text.length() != 20)
+        return false;
 
     bool ok = false;
     quint64 res = text.toULongLong(&ok);
@@ -429,15 +429,17 @@ void GameModel::click(int col, int row) {
     }
 }
 
-void GameModel::readFromScanner(const QString &text) {
+bool GameModel::readFromScanner(const QString &text) {
     quint32 hash, q;
-    if (fromBarcodeText(text, &hash, &q)) {
+    bool result;
+    if (result = fromBarcodeText(text, &hash, &q)) {
         for (int i = 0; i < m_commands.size(); ++i) {
             if (m_commands[i]->commandNameHash() == hash) {
                 invertCommandResult(i, q-1);
             }
         }
     }
+    return result;
 }
 
 void GameModel::invertCommandResult(int commandNumber, quint32 question) {

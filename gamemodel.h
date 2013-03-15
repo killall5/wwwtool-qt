@@ -32,7 +32,7 @@ public slots:
     void setQuestionCount(quint32 questionCount);
     void click(int col, int row);
     void printBlanks(QPrinter *printer) const;
-    void readFromScanner(const QString& text);
+    bool readFromScanner(const QString& text);
 
 private:
     QList<CommandModel*> m_commands;

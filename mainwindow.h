@@ -41,6 +41,7 @@ private:
     QAction *deleteCommandAct;
 
     QAction *questionCountAct;
+    QTimer *timer;
 signals:
     
 public slots:
@@ -57,6 +58,7 @@ public slots:
     void questionCount();
 
     void keyPressEvent(QKeyEvent *);
+    void timerFinished();
 
 };
 

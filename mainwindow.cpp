@@ -33,6 +33,10 @@ void MainWindow::init()
     kpe = new KeyPressEater(this);
     connect(kpe, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressEvent(QKeyEvent*)));
     gameTable->installEventFilter(kpe);
+
+    timer = new QTimer(this);
+    timer->setSingleShot(true);
+    connect(timer, SIGNAL(timeout()), this, SLOT(timerFinished()));
 }
 
 MainWindow::~MainWindow()
@@ -42,6 +46,7 @@ MainWindow::~MainWindow()
     delete kpe;
     delete gameTable;
     delete m_model;
+    delete timer;
 }
 
 void MainWindow::createActions()
@@ -181,5 +186,17 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::onTextScanned(const QString &text)
 {
-    m_model->readFromScanner(text);
+    if (!m_model->readFromScanner(text)) {
+        QPalette p = gameTable->palette();
+        p.setColor(QPalette::Base, QColor("red"));
+        gameTable->setPalette(p);
+        timer->start(100);
+    }
+}
+
+void MainWindow::timerFinished()
+{
+    QPalette p = gameTable->palette();
+    p.setColor(QPalette::Base, QColor("white"));
+    gameTable->setPalette(p);
 }
