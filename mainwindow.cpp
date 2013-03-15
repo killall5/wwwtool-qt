@@ -19,6 +19,7 @@ void MainWindow::init()
     m_model = new GameModel(this);
 
     gameTable = new QTableView(this);
+    originalPalette = gameTable->palette();
     //gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
     gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
@@ -186,17 +187,21 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::onTextScanned(const QString &text)
 {
-    if (!m_model->readFromScanner(text)) {
-        QPalette p = gameTable->palette();
-        p.setColor(QPalette::Base, QColor("red"));
-        gameTable->setPalette(p);
-        timer->start(100);
+    if (text.length() < 2) {
+        return;
     }
+
+    QPalette p = originalPalette;
+    if (m_model->readFromScanner(text)) {
+        p.setColor(QPalette::Base, QColor("green"));
+    } else {
+        p.setColor(QPalette::Base, QColor("red"));
+    }
+    gameTable->setPalette(p);
+    timer->start(100);
 }
 
 void MainWindow::timerFinished()
 {
-    QPalette p = gameTable->palette();
-    p.setColor(QPalette::Base, QColor("white"));
-    gameTable->setPalette(p);
+    gameTable->setPalette(originalPalette);
 }

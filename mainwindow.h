@@ -27,6 +27,7 @@ private:
     void createMenus();
 
     QTableView *gameTable;
+    QPalette originalPalette;
     KeyPressEater *kpe;
 
     QAction *newGameAct;

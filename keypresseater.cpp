@@ -29,7 +29,7 @@ bool KeyPressEater::eventFilter(QObject *obj, QEvent *event)
         timerFinished();
     } else {
         scannedText += keyEvent->text();
-        timer->start(200);
+        timer->start(50);
     }
     return true;
 }
