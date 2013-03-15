@@ -8,7 +8,7 @@ td {
   vertical-align: top;
   background-color: white;
   font-family: Arial;
-  font-size: 16pt;
+  font-size: 20pt;
   font-weight: normal;
   padding: 10pt;
 }
