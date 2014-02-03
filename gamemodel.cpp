@@ -432,7 +432,7 @@ void GameModel::click(int col, int row) {
 bool GameModel::readFromScanner(const QString &text) {
     quint32 hash, q;
     bool result;
-    if (result = fromBarcodeText(text, &hash, &q)) {
+    if ((result = fromBarcodeText(text, &hash, &q))) {
         for (int i = 0; i < m_commands.size(); ++i) {
             if (m_commands[i]->commandNameHash() == hash) {
                 invertCommandResult(i, q-1);
