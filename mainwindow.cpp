@@ -20,9 +20,11 @@ void MainWindow::init()
 
     gameTable = new QTableView(this);
     originalPalette = gameTable->palette();
-    //gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
     gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
+
+    gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    gameTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
 
     setCentralWidget(gameTable);
 
@@ -161,9 +163,8 @@ void MainWindow::printBlanks()
 
 void MainWindow::addCommand()
 {
-    AddCommandDialog *addCommandDialog = new AddCommandDialog(m_model, this);
-//    connect()
-    addCommandDialog->exec();
+    AddCommandDialog addCommandDialog(m_model, this);
+    addCommandDialog.exec();
 }
 
 void MainWindow::deleteCommand()

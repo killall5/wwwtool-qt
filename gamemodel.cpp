@@ -84,7 +84,7 @@ void GameModel::setQuestionCount(quint32 questionCount)
     QModelIndex index;
     quint32 oldQC = m_questionCount;
     if (questionCount < m_questionCount) {
-        beginRemoveColumns(index, questionCount, m_questionCount-1);
+        beginRemoveColumns(index, questionCount+2, m_questionCount+1);
         m_questionCount = questionCount;
         endRemoveColumns();
         for (int i = 0; i < m_commands.size(); ++i) {
@@ -102,14 +102,13 @@ void GameModel::setQuestionCount(quint32 questionCount)
             }
         }
     } else if (questionCount > m_questionCount) {
-        beginInsertColumns(index, m_questionCount, questionCount-1);
+        beginInsertColumns(index, m_questionCount+2, questionCount+1);
         m_questionCount = questionCount;
-        endInsertColumns();
-
         m_questionRating.resize(m_questionCount);
         for (quint32 q = oldQC; q < m_questionCount; ++q) {
             m_questionRating[q] = m_commands.size() + 1;
         }
+        endInsertColumns();
     }
     for (int i = 0; i < m_commands.length(); ++i) {
         m_commands[i]->m_answers.resize(questionCount);
