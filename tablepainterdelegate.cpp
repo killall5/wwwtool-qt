@@ -9,7 +9,9 @@ TablePainterDelegate::TablePainterDelegate(QObject *parent) :
 void TablePainterDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     if (index.row()%2) {
-        painter->fillRect(option.rect, option.palette.midlight());
+        QBrush brush = option.palette.base();
+        brush.setColor(brush.color().darker(110));
+        painter->fillRect(option.rect, brush);
     }
     QItemDelegate::paint(painter, option, index);
 }
