@@ -125,7 +125,7 @@ int GameModel::rowCount(const QModelIndex &parent) const
 int GameModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return m_questionCount+2;
+    return m_questionCount+1;
 }
 
 QVariant GameModel::data(const QModelIndex &index, int role) const
@@ -138,11 +138,9 @@ QVariant GameModel::data(const QModelIndex &index, int role) const
 
     switch (index.column()) {
     case 0:
-        return m_commands[index.row()]->commandName();
-    case 1:
         return QString("%1/%2").arg(m_commands[index.row()]->rightAnswersCount).arg(m_commands[index.row()]->rating);
     default:
-        switch (m_commands[index.row()]->m_answers[index.column()-2]) {
+        switch (m_commands[index.row()]->m_answers[index.column()-1]) {
         case CommandModel::ANSWER_RIGHT:
             return QString("+");
         case CommandModel::ANSWER_WRONG:
@@ -163,16 +161,13 @@ QVariant GameModel::headerData(int section, Qt::Orientation orientation, int rol
     if (orientation == Qt::Horizontal) {
         switch (section) {
         case 0:
-            return QString("Название");
-        case 1:
             return QString("Результат");
         default:
-            return QString("%1").arg(section-1);
+            return QString("%1").arg(section);
         }
     } else if (orientation == Qt::Vertical) {
-
+        return QVariant(m_commands[section]->commandName());
     }
-
     return QVariant();
 }
 
@@ -424,7 +419,7 @@ bool GameModel::load(QString fileName) {
 
 void GameModel::click(int col, int row) {
     if (col > 1) {
-        invertCommandResult(row, col-2);
+        invertCommandResult(row, col-1);
     }
 }
 
@@ -457,7 +452,7 @@ void GameModel::invertCommandResult(int commandNumber, quint32 question) {
             m_commands[commandNumber]->rating += --m_questionRating[question];
         }
 
-        QModelIndex i = createIndex(commandNumber, question+2);
+        QModelIndex i = createIndex(commandNumber, question+1);
         dataChanged(i, i);
         i = createIndex(commandNumber, 1);
         dataChanged(i, i);

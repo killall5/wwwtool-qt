@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include "addcommanddialog.h"
 #include "questioncountdialog.h"
+#include "tablepainterdelegate.h"
 #include <QHeaderView>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -22,9 +23,9 @@ void MainWindow::init()
     originalPalette = gameTable->palette();
     gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
+    gameTable->setItemDelegate(new TablePainterDelegate);
 
     gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    gameTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
 
     setCentralWidget(gameTable);
 

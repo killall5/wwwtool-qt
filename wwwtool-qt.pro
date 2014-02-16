@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     gamemodel.cpp \
     questioncountdialog.cpp \
     keypresseater.cpp \
-    scannermanager.cpp
+    scannermanager.cpp \
+    tablepainterdelegate.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -29,6 +30,7 @@ HEADERS  += \
     gamemodel.h \
     questioncountdialog.h \
     keypresseater.h \
-    scannermanager.h
+    scannermanager.h \
+    tablepainterdelegate.h
 
 FORMS +=
