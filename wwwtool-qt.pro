@@ -33,4 +33,4 @@ HEADERS  += \
     scannermanager.h \
     tablepainterdelegate.h
 
-FORMS +=
+RESOURCES += templates.qrc

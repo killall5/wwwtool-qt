@@ -84,7 +84,7 @@ void GameModel::setQuestionCount(quint32 questionCount)
     QModelIndex index;
     quint32 oldQC = m_questionCount;
     if (questionCount < m_questionCount) {
-        beginRemoveColumns(index, questionCount+2, m_questionCount+1);
+        beginRemoveColumns(index, questionCount+1, m_questionCount);
         m_questionCount = questionCount;
         endRemoveColumns();
         for (int i = 0; i < m_commands.size(); ++i) {
@@ -97,12 +97,12 @@ void GameModel::setQuestionCount(quint32 questionCount)
                 }
             }
             if (changed) {
-                QModelIndex idx = createIndex(i, 1);
+                QModelIndex idx = createIndex(i, 0);
                 dataChanged(idx, idx);
             }
         }
     } else if (questionCount > m_questionCount) {
-        beginInsertColumns(index, m_questionCount+2, questionCount+1);
+        beginInsertColumns(index, m_questionCount+1, questionCount);
         m_questionCount = questionCount;
         m_questionRating.resize(m_questionCount);
         for (quint32 q = oldQC; q < m_questionCount; ++q) {
@@ -130,7 +130,7 @@ int GameModel::columnCount(const QModelIndex &parent) const
 
 QVariant GameModel::data(const QModelIndex &index, int role) const
 {
-    if (index.column() > 1 && role == Qt::TextAlignmentRole) {
+    if (index.column() > 0 && role == Qt::TextAlignmentRole) {
         return Qt::AlignCenter;
     }
     if (role != Qt::DisplayRole)
@@ -313,7 +313,7 @@ bool GameModel::save(QString fileName) const {
 }
 
 void GameModel::exportResults(QString fileName) const {
-    QFile source("/Users/mirror/source.tht");
+    QFile source(":/templates/demo.tht");
     source.open(QIODevice::ReadOnly);
     QByteArray templ = source.readAll();
     source.close();
@@ -418,7 +418,7 @@ bool GameModel::load(QString fileName) {
 }
 
 void GameModel::click(int col, int row) {
-    if (col > 1) {
+    if (col > 0) {
         invertCommandResult(row, col-1);
     }
 }
@@ -454,7 +454,7 @@ void GameModel::invertCommandResult(int commandNumber, quint32 question) {
 
         QModelIndex i = createIndex(commandNumber, question+1);
         dataChanged(i, i);
-        i = createIndex(commandNumber, 1);
+        i = createIndex(commandNumber, 0);
         dataChanged(i, i);
 
         for (int c = 0; c < m_commands.size(); ++c) {
@@ -464,7 +464,7 @@ void GameModel::invertCommandResult(int commandNumber, quint32 question) {
                 } else {
                     m_commands[c]->rating++;
                 }
-                i = createIndex(c, 1);
+                i = createIndex(c, 0);
                 dataChanged(i, i);
             }
         }
