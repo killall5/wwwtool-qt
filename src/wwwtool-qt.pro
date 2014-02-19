@@ -8,7 +8,7 @@ QT       += core gui printsupport xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = wwwtool-qt
+TARGET = WWWTool
 TEMPLATE = app
 
 CONFIG += silent
@@ -43,4 +43,5 @@ mac {
     system(cd $$PWD/resources; ./create_icns.sh)
     ICON = resources/wwwtool-old.icns
     QMAKE_INFO_PLIST = resources/Info.plist.template
+    QMAKE_POST_LINK += macdeployqt $(QMAKE_TARGET).app -dmg
 }
