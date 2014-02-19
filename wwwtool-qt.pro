@@ -33,4 +33,14 @@ HEADERS  += \
     scannermanager.h \
     tablepainterdelegate.h
 
-RESOURCES += templates.qrc
+RESOURCES += resources/templates.qrc
+
+win32 {
+    RC_FILE = resources/wwwtool.rc
+}
+
+mac {
+    system(cd $$PWD/resources; ./create_icns.sh)
+    ICON = resources/wwwtool-old.icns
+    QMAKE_INFO_PLIST = resources/Info.plist.template
+}

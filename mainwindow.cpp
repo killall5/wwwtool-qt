@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::init()
 {
     setAttribute(Qt::WA_DeleteOnClose);
+    setWindowIcon(QIcon(":/img/wwwtool-old.ico"));
 
     m_model = new GameModel(this);
 
