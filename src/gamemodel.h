@@ -24,7 +24,8 @@ public:
 
     quint32 questionCount() { return m_questionCount; }
     bool save(QString fileName) const;
-    void exportResults(QString fileName) const;
+    void exportHTML(QString fileName) const;
+    void exportCSV(QString fileName) const;
     bool load(QString fileName);
 signals:
     

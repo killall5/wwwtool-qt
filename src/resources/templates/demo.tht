@@ -54,6 +54,24 @@ td.ololo {
       return x.n.localeCompare(y.n);
     }
   );
+
+/*
+  Results.res.sort(
+    function(y,x) {
+      if (x.a != y.a) {
+        return x.a - y.a;
+      } else {
+        return x.r - y.r;
+      }
+    }
+  );
+  
+  document.write('<pre>');
+  for (var i = 0; i < Results.res.length; ++i) {
+    document.write((i+1) + ' ' + Results.res[i].n + ' ' + Results.res[i].a + '/' + Results.res[i].r + '\n');
+  }
+  document.write('</pre>');
+*/
   main();
 //-->
 </script>

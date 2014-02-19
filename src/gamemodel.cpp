@@ -312,7 +312,7 @@ bool GameModel::save(QString fileName) const {
     return !xml.hasError();
 }
 
-void GameModel::exportResults(QString fileName) const {
+void GameModel::exportHTML(QString fileName) const {
     QFile source(":/templates/demo.tht");
     source.open(QIODevice::ReadOnly);
     QByteArray templ = source.readAll();
@@ -334,6 +334,27 @@ void GameModel::exportResults(QString fileName) const {
 
     templ.replace(QString("{/*Results*/}"), jsonResults);
     file.write(templ);
+    file.close();
+}
+
+void GameModel::exportCSV(QString fileName) const {
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+    QTextStream out(&file);
+
+    out << "Название,Результат,Рейтинг";
+    int i; quint32 q;
+    for (q = 0; q < m_questionCount; ++q) {
+        out << QString(",%1").arg(q+1);
+    }
+    out << "\r\n";
+    for (i = 0; i < m_commands.size(); ++i) {
+        out << QString("\"%1\",%2,%3").arg(m_commands[i]->commandName()).arg(m_commands[i]->rightAnswersCount).arg(m_commands[i]->rating);
+        for (q = 0; q < m_questionCount; ++q) {
+            out << QString(",%1").arg(m_commands[i]->m_answers[q]==CommandModel::ANSWER_RIGHT?"+":"–");
+        }
+        out << "\r\n";
+    }
     file.close();
 }
 

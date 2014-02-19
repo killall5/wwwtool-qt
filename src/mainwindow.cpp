@@ -86,30 +86,37 @@ void MainWindow::createActions()
     questionCountAct->setShortcut(tr("Ctrl+E"));
     connect(questionCountAct, SIGNAL(triggered()), this, SLOT(questionCount()));
 
-    exportResultsAct = new QAction(tr("Экспорт результатов..."), this);
-    connect(exportResultsAct, SIGNAL(triggered()), this, SLOT(exportResults()));
+    exportHTMLAct = new QAction(tr("HMTL..."), this);
+    connect(exportHTMLAct, SIGNAL(triggered()), this, SLOT(exportHTML()));
+
+    exportCSVAct = new QAction(tr("CSV..."), this);
+    connect(exportCSVAct, SIGNAL(triggered()), this, SLOT(exportCSV()));
 }
 
 void MainWindow::createMenus()
 {
-    QMenu *gameMenu = menuBar()->addMenu("Игра");
+    QMenu *gameMenu = menuBar()->addMenu(tr("Игра"));
     gameMenu->addAction(newGameAct);
     gameMenu->addAction(saveGameAct);
     gameMenu->addAction(loadGameAct);
-    gameMenu->addAction(exportResultsAct);
+
+    QMenu *exportMenu = gameMenu->addMenu(tr("Экспорт"));
+    exportMenu->addAction(exportHTMLAct);
+    exportMenu->addAction(exportCSVAct);
+
     gameMenu->addAction(closeGameAct);
     gameMenu->addSeparator();
     gameMenu->addAction(printBlanksAct);
 
-    QMenu *commandsMenu = menuBar()->addMenu("Команды");
+    QMenu *commandsMenu = menuBar()->addMenu(tr("Команды"));
     commandsMenu->addAction(addCommandAct);
     commandsMenu->addAction(deleteCommandAct);
 
-    QMenu *questionsMenu = menuBar()->addMenu("Вопросы");
+    QMenu *questionsMenu = menuBar()->addMenu(tr("Вопросы"));
     questionsMenu->addAction(questionCountAct);
 
-    QMenu *help = menuBar()->addMenu(tr("Help"));
-    Q_UNUSED(help);
+//    QMenu *help = menuBar()->addMenu(tr("Help"));
+//    Q_UNUSED(help);
 }
 
 void MainWindow::newGame()
@@ -141,14 +148,24 @@ void MainWindow::saveGame()
     setWindowTitle(fileInfo.baseName());
 }
 
-void MainWindow::exportResults()
+void MainWindow::exportHTML()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("HTML (*.html)"));
 
     if (fileName.isEmpty()) return;
 
-    m_model->exportResults(fileName);
+    m_model->exportHTML(fileName);
 }
+
+void MainWindow::exportCSV()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("CSV (*.csv)"));
+
+    if (fileName.isEmpty()) return;
+
+    m_model->exportCSV(fileName);
+}
+
 
 void MainWindow::printBlanks()
 {
