@@ -31,6 +31,8 @@ void MainWindow::init()
     gameTable->setItemDelegate(new TablePainterDelegate);
 
     gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    connect(gameTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection))
+);
 
     setCentralWidget(gameTable);
 
@@ -84,6 +86,7 @@ void MainWindow::createActions()
     connect(addCommandAct, SIGNAL(triggered()), this, SLOT(addCommand()));
 
     deleteCommandAct = new QAction(tr("Удалить команду..."), this);
+    deleteCommandAct->setEnabled(false);
     connect(deleteCommandAct, SIGNAL(triggered()), this, SLOT(deleteCommand()));
 
     questionCountAct = new QAction(tr("Количество вопросов..."), this);
@@ -193,7 +196,14 @@ void MainWindow::addCommand()
 
 void MainWindow::deleteCommand()
 {
-
+    QModelIndexList selection = gameTable->selectionModel()->selection().indexes();
+    if (!selection.isEmpty()) {
+        QSet<int> selected_rows;
+        foreach(QModelIndex i, selection) {
+            selected_rows.insert(i.row());
+        }
+        m_model->removeCommandsAtRows(selected_rows);
+    }
 }
 
 void MainWindow::questionCount()
@@ -210,6 +220,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             m_model->click(i.column(), i.row());
         }
     }
+}
+void MainWindow::selectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
+{
+    deleteCommandAct->setEnabled(!selected.isEmpty());
 }
 
 void MainWindow::onTextScanned(const QString &text)

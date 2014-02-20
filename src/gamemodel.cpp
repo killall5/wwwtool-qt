@@ -518,3 +518,29 @@ void GameModel::dataChanged(const QModelIndex &topLeft, const QModelIndex &botto
     m_modified = true;
     QAbstractTableModel::dataChanged(topLeft, bottomRight, roles);
 }
+
+void GameModel::removeCommandsAtRows(const QSet<int>& rows)
+{
+    foreach(int row, rows) {
+        // first of all: need to upgrade rating
+        //  and results of other commands
+        for (quint32 q = 0; q < m_questionCount; ++q) {
+            if (m_commands[row]->m_answers[q] != CommandModel::ANSWER_RIGHT) {
+                for (int c = 0; c < m_commands.size(); ++c) {
+                    if (m_commands[c]->m_answers[q] == CommandModel::ANSWER_RIGHT) {
+                        // rating going down
+                        m_commands[c]->rating--;
+                    }
+                }
+            }
+        }
+    }
+    QList<int> sorted_rows = rows.toList();
+    qSort(sorted_rows.begin(), sorted_rows.end(), std::greater<int>());
+    beginResetModel();
+    foreach(int row, sorted_rows) {
+        m_commands.removeAt(row);
+    }
+    m_modified = true;
+    endResetModel();
+}

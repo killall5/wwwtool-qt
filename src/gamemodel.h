@@ -21,6 +21,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
     void addCommand(const QString& commandName);
+    void removeCommandsAtRows(const QSet<int>& rows);
 
     quint32 questionCount() { return m_questionCount; }
     bool save() const;

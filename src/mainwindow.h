@@ -64,6 +64,7 @@ public slots:
     void timerFinished();
     void closeEvent (QCloseEvent *event);
     void titleChanged();
+    void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
 };
 
 #endif // MAINWINDOW_H
