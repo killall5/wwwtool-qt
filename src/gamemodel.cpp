@@ -8,6 +8,7 @@
 #include <QFileInfo>
 #include <cmath>
 #include "code128.h"
+#include <functional>
 
 class CommandModel {
 public:
