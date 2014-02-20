@@ -206,7 +206,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     QModelIndexList s = gameTable->selectionModel()->selection().indexes();
     if (event->key() == 32 && !s.empty()) {
-        m_model->click(s.begin()->column(), s.begin()->row());
+        foreach (QModelIndex i, s) {
+            m_model->click(i.column(), i.row());
+        }
     }
 }
 
