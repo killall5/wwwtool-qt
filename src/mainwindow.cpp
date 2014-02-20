@@ -202,7 +202,11 @@ void MainWindow::deleteCommand()
         foreach(QModelIndex i, selection) {
             selected_rows.insert(i.row());
         }
-        m_model->removeCommandsAtRows(selected_rows);
+        if (QMessageBox::Yes == QMessageBox::question(this, windowTitle(), tr("Удалить выбранные команды?"))) {
+            m_model->removeCommandsAtRows(selected_rows);
+        }
+    } else {
+        deleteCommandAct->setEnabled(false);
     }
 }
 

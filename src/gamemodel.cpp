@@ -147,8 +147,6 @@ QVariant GameModel::data(const QModelIndex &index, int role) const
         switch (m_commands[index.row()]->m_answers[index.column()-1]) {
         case CommandModel::ANSWER_RIGHT:
             return QString("+");
-        case CommandModel::ANSWER_WRONG:
-            return QString("–");
         default:
             return QVariant();
         }
@@ -526,6 +524,7 @@ void GameModel::removeCommandsAtRows(const QSet<int>& rows)
         //  and results of other commands
         for (quint32 q = 0; q < m_questionCount; ++q) {
             if (m_commands[row]->m_answers[q] != CommandModel::ANSWER_RIGHT) {
+                m_questionRating[q]--;
                 for (int c = 0; c < m_commands.size(); ++c) {
                     if (m_commands[c]->m_answers[q] == CommandModel::ANSWER_RIGHT) {
                         // rating going down
