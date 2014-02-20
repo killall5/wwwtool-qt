@@ -31,15 +31,18 @@ public:
     bool load(QString fileName);
     QString title() const { return m_title; }
     bool modified() const { return m_modified; }
+    int fixedQuestion() const { return m_fixedQuestion; }
 signals:
     void titleChanged() const;
     
 public slots:
     void setQuestionCount(quint32 questionCount);
     void click(int col, int row);
+    void empty(int col, int row);
     void printBlanks(QPrinter *printer) const;
     bool readFromScanner(const QString& text);
     void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
+    void fixQuestion(int column);
 
 private:
     QList<CommandModel*> m_commands;
@@ -48,11 +51,13 @@ private:
     mutable QString m_fileName;
     mutable QString m_title;
     mutable bool m_modified;
+    int m_fixedQuestion;
 
     QString toBarcodeText(quint32 hash, quint32 question = 0) const;
     bool fromBarcodeText(const QString& text, quint32 *hash, quint32 *question) const;
 
     void invertCommandResult(int commandNumber, quint32 question);
+    void discardCommandResult(int commandNumber, quint32 question);
 };
 
 #endif // GAMEMODEL_H

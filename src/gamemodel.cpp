@@ -54,6 +54,7 @@ GameModel::GameModel(QObject *parent) :
 {
     m_questionCount = 0;
     m_modified = false;
+    m_fixedQuestion = 0;
 }
 
 #include <QDebug>
@@ -92,6 +93,10 @@ void GameModel::setQuestionCount(quint32 questionCount)
         beginRemoveColumns(index, questionCount+1, m_questionCount);
         m_questionCount = questionCount;
         endRemoveColumns();
+        if ((quint32)m_fixedQuestion > m_questionCount) {
+            m_fixedQuestion = 0;
+            layoutChanged();
+        }
         for (int i = 0; i < m_commands.size(); ++i) {
             bool changed = false;
             for (quint32 q = m_questionCount; q < oldQC; ++q) {
@@ -464,10 +469,18 @@ void GameModel::click(int col, int row) {
     }
 }
 
+void GameModel::empty(int col, int row) {
+    if (col > 0) {
+        discardCommandResult(row, col-1);
+    }
+}
+
 bool GameModel::readFromScanner(const QString &text) {
     quint32 hash, q;
     bool result;
     if ((result = fromBarcodeText(text, &hash, &q))) {
+        if (m_fixedQuestion > 0) q = m_fixedQuestion;
+        if (q == 0) return false;
         for (int i = 0; i < m_commands.size(); ++i) {
             if (m_commands[i]->commandNameHash() == hash) {
                 invertCommandResult(i, q-1);
@@ -512,6 +525,19 @@ void GameModel::invertCommandResult(int commandNumber, quint32 question) {
     }
 }
 
+void GameModel::discardCommandResult(int commandNumber, quint32 question)
+{
+    if (commandNumber < m_commands.size() && question < (quint32)m_commands[commandNumber]->m_answers.size()) {
+        if (m_commands[commandNumber]->m_answers[question] == CommandModel::ANSWER_RIGHT) {
+            invertCommandResult(commandNumber, question);
+        } else if (m_commands[commandNumber]->m_answers[question] == CommandModel::ANSWER_WRONG) {
+            m_commands[commandNumber]->m_answers[question] = CommandModel::ANSWER_UNKNOWN;
+            QModelIndex i = createIndex(commandNumber, question+1);
+            dataChanged(i, i);
+        }
+    }
+}
+
 void GameModel::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
 {
     m_modified = true;
@@ -543,4 +569,14 @@ void GameModel::removeCommandsAtRows(const QSet<int>& rows)
     }
     m_modified = true;
     endResetModel();
+}
+
+void GameModel::fixQuestion(int column)
+{
+    if (m_fixedQuestion == column) {
+        m_fixedQuestion = 0;
+    } else {
+        m_fixedQuestion = column;
+    }
+    layoutChanged();
 }

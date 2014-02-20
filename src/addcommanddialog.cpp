@@ -41,6 +41,7 @@ void AddCommandDialog::addCommand()
         errorLabel->setVisible(false);
         nameEdit->clear();
     } catch (QException &e) {
+        Q_UNUSED(e);
         errorLabel->setText(tr("Команда с таким названием уже существует"));
         errorLabel->setVisible(true);
     }

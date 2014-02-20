@@ -28,11 +28,11 @@ void MainWindow::init()
     originalPalette = gameTable->palette();
     gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
-    gameTable->setItemDelegate(new TablePainterDelegate);
+    gameTable->setItemDelegate(new TablePainterDelegate(m_model));
 
     gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    connect(gameTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection))
-);
+    connect(gameTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+    connect(gameTable->horizontalHeader(), SIGNAL(sectionDoubleClicked(int)), m_model, SLOT(fixQuestion(int)));
 
     setCentralWidget(gameTable);
 
@@ -219,14 +219,18 @@ void MainWindow::questionCount()
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     QModelIndexList s = gameTable->selectionModel()->selection().indexes();
-    if (event->key() == 32 && !s.empty()) {
-        foreach (QModelIndex i, s) {
+    if (s.isEmpty()) return;
+    foreach (QModelIndex i, s) {
+        if (event->key() == 32) {
             m_model->click(i.column(), i.row());
+        } else if (event->key() == Qt::Key_Escape) {
+            m_model->empty(i.column(), i.row());
         }
     }
 }
 void MainWindow::selectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
 {
+    Q_UNUSED(deselected);
     deleteCommandAct->setEnabled(!selected.isEmpty());
 }
 
