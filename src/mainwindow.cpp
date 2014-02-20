@@ -8,6 +8,7 @@
 #include <QHeaderView>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -21,6 +22,7 @@ void MainWindow::init()
     setWindowIcon(QIcon(":/img/wwwtool-old.ico"));
 
     m_model = new GameModel(this);
+    connect(m_model, SIGNAL(titleChanged()), this, SLOT(titleChanged()));
 
     gameTable = new QTableView(this);
     originalPalette = gameTable->palette();
@@ -142,37 +144,30 @@ void MainWindow::loadGame()
     if (fileName.isEmpty()) return;
 
     m_model->load(fileName);
-    QFileInfo fileInfo(fileName);
-    setWindowTitle(fileInfo.baseName());
 }
 
 void MainWindow::saveGame()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save game"), QString(), tr("WWWTool game (*.wg)"));
-
-    if (fileName.isEmpty()) return;
-
-    m_model->save(fileName);
-
-    QFileInfo fileInfo(fileName);
-    setWindowTitle(fileInfo.baseName());
+    if (m_model->title().isEmpty()) {
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save game"), QString(), tr("WWWTool game (*.wg)"));
+        if (fileName.isEmpty()) return;
+        m_model->save(fileName);
+    } else {
+        m_model->save();
+    }
 }
 
 void MainWindow::exportHTML()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("HTML (*.html)"));
-
     if (fileName.isEmpty()) return;
-
     m_model->exportHTML(fileName);
 }
 
 void MainWindow::exportCSV()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("CSV (*.csv)"));
-
     if (fileName.isEmpty()) return;
-
     m_model->exportCSV(fileName);
 }
 
@@ -234,4 +229,28 @@ void MainWindow::onTextScanned(const QString &text)
 void MainWindow::timerFinished()
 {
     gameTable->setPalette(originalPalette);
+}
+
+void MainWindow::titleChanged()
+{
+    setWindowTitle(m_model->title());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QMessageBox::StandardButton resBtn = QMessageBox::Yes;
+    if (m_model->modified()) {
+        resBtn = QMessageBox::question( this, windowTitle(),
+                                        tr("Сохранить изменения?"),
+                                        QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                                        QMessageBox::Yes);
+        if (resBtn == QMessageBox::Yes) {
+            saveGame();
+        }
+    }
+    if (resBtn == QMessageBox::Cancel) {
+        event->ignore();
+    } else {
+        event->accept();
+    }
 }

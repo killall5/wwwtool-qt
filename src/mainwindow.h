@@ -62,7 +62,8 @@ public slots:
 
     void keyPressEvent(QKeyEvent *);
     void timerFinished();
-
+    void closeEvent (QCloseEvent *event);
+    void titleChanged();
 };
 
 #endif // MAINWINDOW_H

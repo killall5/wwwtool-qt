@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QFile>
 #include <QXmlStreamWriter>
+#include <QFileInfo>
 #include <cmath>
 #include "code128.h"
 
@@ -51,6 +52,7 @@ GameModel::GameModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     m_questionCount = 0;
+    m_modified = false;
 }
 
 #include <QDebug>
@@ -76,6 +78,7 @@ void GameModel::addCommand(const QString& commandName)
 
     beginInsertRows(index, m_commands.size(), m_commands.size());
     m_commands.push_back(command);
+    m_modified = true;
     endInsertRows();
 }
 
@@ -83,6 +86,7 @@ void GameModel::setQuestionCount(quint32 questionCount)
 {
     QModelIndex index;
     quint32 oldQC = m_questionCount;
+    m_modified = m_modified || questionCount != m_questionCount;
     if (questionCount < m_questionCount) {
         beginRemoveColumns(index, questionCount+1, m_questionCount);
         m_questionCount = questionCount;
@@ -275,6 +279,10 @@ bool GameModel::fromBarcodeText(const QString& text, quint32 *hash, quint32 *que
     return ok;
 }
 
+bool GameModel::save() const {
+    return save(m_fileName);
+}
+
 bool GameModel::save(QString fileName) const {
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
@@ -309,6 +317,13 @@ bool GameModel::save(QString fileName) const {
     xml.writeEndDocument();
 
     file.close();
+    if (fileName != m_fileName) {
+        m_fileName = fileName;
+        QFileInfo fileInfo(fileName);
+        m_title = fileInfo.baseName();
+        emit titleChanged();
+    }
+    m_modified = false;
     return !xml.hasError();
 }
 
@@ -434,7 +449,13 @@ bool GameModel::load(QString fileName) {
     }
 
     endResetModel();
-
+    if (fileName != m_fileName) {
+        m_fileName = fileName;
+        QFileInfo fileInfo(fileName);
+        m_title = fileInfo.baseName();
+        emit titleChanged();
+    }
+    m_modified = false;
     return true;
 }
 
@@ -490,4 +511,10 @@ void GameModel::invertCommandResult(int commandNumber, quint32 question) {
             }
         }
     }
+}
+
+void GameModel::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+{
+    m_modified = true;
+    QAbstractTableModel::dataChanged(topLeft, bottomRight, roles);
 }
