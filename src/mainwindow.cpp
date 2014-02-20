@@ -6,6 +6,8 @@
 #include "questioncountdialog.h"
 #include "tablepainterdelegate.h"
 #include <QHeaderView>
+#include <QApplication>
+#include <QDesktopWidget>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -122,6 +124,14 @@ void MainWindow::createMenus()
 void MainWindow::newGame()
 {
     MainWindow *w = new MainWindow();
+    QPoint position = pos() + QPoint(40, 40);
+    QRect available = QApplication::desktop()->availableGeometry(this);
+    QRect frame = frameGeometry();
+     if (position.x() + frame.width() > available.right())
+         position.rx() = available.left();
+     if (position.y() + frame.height() > available.bottom() - 20)
+         position.ry() = available.top();
+    w->move(position);
     w->show();
 }
 
