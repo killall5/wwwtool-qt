@@ -360,17 +360,19 @@ void GameModel::exportCSV(QString fileName) const {
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
     QTextStream out(&file);
+    out.setGenerateByteOrderMark(true);
+    out.setCodec("UTF-8");
 
-    out << "Название,Результат,Рейтинг";
+    out << QString("Название;Результат;Рейтинг");
     int i; quint32 q;
     for (q = 0; q < m_questionCount; ++q) {
-        out << QString(",%1").arg(q+1);
+        out << QString(";%1").arg(q+1);
     }
     out << "\r\n";
     for (i = 0; i < m_commands.size(); ++i) {
-        out << QString("\"%1\",%2,%3").arg(m_commands[i]->commandName()).arg(m_commands[i]->rightAnswersCount).arg(m_commands[i]->rating);
+        out << QString("\"%1\";%2;%3").arg(m_commands[i]->commandName()).arg(m_commands[i]->rightAnswersCount).arg(m_commands[i]->rating);
         for (q = 0; q < m_questionCount; ++q) {
-            out << QString(",%1").arg(m_commands[i]->m_answers[q]==CommandModel::ANSWER_RIGHT?"+":"–");
+            out << QString(";%1").arg(m_commands[i]->m_answers[q]==CommandModel::ANSWER_RIGHT?"+":"–");
         }
         out << "\r\n";
     }
