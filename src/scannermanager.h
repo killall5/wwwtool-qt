@@ -21,13 +21,11 @@ public:
         clients.removeAll(l);
     }
 
-    void textScanned(const QString& text) {
-        foreach(ScannerManagerListener *i, clients) {
-            i->onTextScanned(text);
-        }
-    }
+    void textScanned(const QString& text);
 
 private:
+    qint64 prevTime;
+    QString prevText;
     ScannerManager() {}
     
     QList<ScannerManagerListener*> clients;
