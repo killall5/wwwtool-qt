@@ -13,6 +13,11 @@ class GameModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
+	enum SortCriteria {
+		SORT_BY_TITLE,
+		SORT_BY_RESULT
+	};
+
     explicit GameModel(QObject *parent = 0);
     
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -32,6 +37,8 @@ public:
     QString title() const { return m_title; }
     bool modified() const { return m_modified; }
     int fixedQuestion() const { return m_fixedQuestion; }
+
+    void sort_by_criteria(SortCriteria criteria);
 signals:
     void titleChanged() const;
     

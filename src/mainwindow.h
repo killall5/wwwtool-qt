@@ -41,6 +41,8 @@ private:
 
     QAction *addCommandAct;
     QAction *deleteCommandAct;
+    QAction *sortByTitleAct;
+    QAction *sortByResultAct;
 
     QAction *questionCountAct;
     QTimer *timer;
@@ -57,6 +59,8 @@ public slots:
 
     void addCommand();
     void deleteCommand();
+    void sortByTitle();
+    void sortByResult();
 
     void questionCount();
 

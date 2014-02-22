@@ -582,3 +582,37 @@ void GameModel::fixQuestion(int column)
     }
     layoutChanged();
 }
+
+struct sort_by_name {
+    // always asceding
+    bool operator() (const CommandModel *x, const CommandModel *y) {
+        return x->commandName() < y->commandName();
+    }
+};
+
+struct sort_by_result {
+    // always desceding
+    bool operator() (const CommandModel *x, const CommandModel *y) {
+        if (x->rightAnswersCount == y->rightAnswersCount) {
+            return x->rating > y->rating;
+        } else {
+            return x->rightAnswersCount > y->rightAnswersCount;
+        }
+    }
+};
+
+void GameModel::sort_by_criteria(SortCriteria criteria)
+{
+    switch(criteria) {
+        case SORT_BY_TITLE:
+            qSort(m_commands.begin(), m_commands.end(), sort_by_name());
+            break;
+        case SORT_BY_RESULT:
+            qSort(m_commands.begin(), m_commands.end(), sort_by_result());
+            break;
+        default:
+            break;
+    }
+
+    layoutChanged();
+}

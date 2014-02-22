@@ -89,6 +89,14 @@ void MainWindow::createActions()
     deleteCommandAct->setEnabled(false);
     connect(deleteCommandAct, SIGNAL(triggered()), this, SLOT(deleteCommand()));
 
+    sortByTitleAct = new QAction(tr("Сортировать по имени"), this);
+    sortByTitleAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_0));
+    connect(sortByTitleAct, SIGNAL(triggered()), this, SLOT(sortByTitle()));
+
+    sortByResultAct = new QAction(tr("Сортировать по результату"), this);
+    sortByResultAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1));
+    connect(sortByResultAct, SIGNAL(triggered()), this, SLOT(sortByResult()));
+
     questionCountAct = new QAction(tr("Количество вопросов..."), this);
     questionCountAct->setShortcut(tr("Ctrl+E"));
     connect(questionCountAct, SIGNAL(triggered()), this, SLOT(questionCount()));
@@ -118,6 +126,9 @@ void MainWindow::createMenus()
     QMenu *commandsMenu = menuBar()->addMenu(tr("Команды"));
     commandsMenu->addAction(addCommandAct);
     commandsMenu->addAction(deleteCommandAct);
+    commandsMenu->addSeparator();
+    commandsMenu->addAction(sortByTitleAct);
+    commandsMenu->addAction(sortByResultAct);
 
     QMenu *questionsMenu = menuBar()->addMenu(tr("Вопросы"));
     questionsMenu->addAction(questionCountAct);
@@ -277,4 +288,14 @@ void MainWindow::closeEvent(QCloseEvent *event)
     } else {
         event->accept();
     }
+}
+
+void MainWindow::sortByTitle()
+{
+    m_model->sort_by_criteria(GameModel::SORT_BY_TITLE);
+}
+
+void MainWindow::sortByResult()
+{
+    m_model->sort_by_criteria(GameModel::SORT_BY_RESULT);
 }
