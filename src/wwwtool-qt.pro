@@ -43,5 +43,5 @@ mac {
     system(cd $$PWD/resources; ./create_icns.sh)
     ICON = resources/wwwtool-old.icns
     QMAKE_INFO_PLIST = resources/Info.plist.template
-    QMAKE_POST_LINK += [ -n "$NODMG" ] && macdeployqt $(QMAKE_TARGET).app -dmg
+    QMAKE_POST_LINK += [ -n "${NODMG}" ] || macdeployqt $(QMAKE_TARGET).app -dmg
 }
