@@ -4,7 +4,17 @@
 </head>
 <body>
 <style>
-td {
+body {
+  padding: 30pt 26pt 0 26pt;
+  margin: 0;
+  overflow: hidden;
+}
+table {
+  width: 80%;
+  margin-left: 10%;
+  border-collapse:collapse;
+}
+table td {
   vertical-align: top;
   background-color: white;
   font-family: Arial;
@@ -12,15 +22,22 @@ td {
   font-weight: normal;
   padding: 10pt;
 }
-body {
-  padding: 30pt 26pt 0 26pt;
-  margin: 0;
-  overflow: hidden;
+table tr.odd td {
+  background-color: #ddd;
 }
-td.ololo {
+table td.title {
   white-space: nowrap;
-  overflow: hidden;
 }
+table td.result {
+  width: 25%;
+}
+.question {
+  display: block;
+  text-align: right;
+  float: left;
+  width: 50%;
+}
+
 </style>
 <p id="results"></p>
 <script>
@@ -30,18 +47,15 @@ td.ololo {
 
   function main() {
 
-    text = '<table cellspacing="1" cellpadding="2" width="100%">';
-    rows = Math.round(Math.min(22, Results.res.length - pos)/2);
+    text = '<table>';
+    rows = Math.min(11, Results.res.length - pos);
     for (var i=0; i < rows; i++) {
-      text += "<tr>";
-      text += '<td class="ololo" width="35%">' + Results.res[pos+i].n + '</td><td width="10%" align="center">' + Results.res[pos+i].a + '/' + Results.res[pos+i].r + '</td>';
-      text += "<td>&nbsp;</td>";
-      if (pos+rows+i < Results.res.length) {
-        text += '<td class="ololo" width="35%">' + Results.res[pos+rows+i].n + '</td><td width="10%" align="center">' + Results.res[pos+rows+i].a + '/' + Results.res[pos+rows+i].r + '</td>';
-      }
-      text += "</tr>"
+      text += '<tr class="'+ (i%2?"":"odd") +'">';
+      text += '<td class="title">' + Results.res[pos+i].n + '</td>';
+      text += '<td class="result"><span class="question">' + Results.res[pos+i].a + '</span>/' + Results.res[pos+i].r + '</td>';
+      text += '</tr>';
     }
-    pos = (pos + 2*rows) % Results.res.length;
+    pos = (pos + rows) % Results.res.length;
     text += '</table>';
 
     document.getElementById('results').innerHTML = text;
