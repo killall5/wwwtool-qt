@@ -10,6 +10,7 @@
 #include "code128.h"
 #include <functional>
 
+
 class CommandModel {
 public:
     CommandModel() : rightAnswersCount(0), rating(0) {
@@ -49,6 +50,24 @@ private:
     }
 };
 
+struct sort_by_name {
+    // always asceding
+    bool operator() (const CommandModel *x, const CommandModel *y) {
+        return x->commandName().toLower() < y->commandName().toLower();
+    }
+};
+
+struct sort_by_result {
+    // always desceding
+    bool operator() (const CommandModel *x, const CommandModel *y) {
+        if (x->rightAnswersCount == y->rightAnswersCount) {
+            return x->rating > y->rating;
+        } else {
+            return x->rightAnswersCount > y->rightAnswersCount;
+        }
+    }
+};
+
 GameModel::GameModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
@@ -56,8 +75,6 @@ GameModel::GameModel(QObject *parent) :
     m_modified = false;
     m_fixedQuestion = 0;
 }
-
-#include <QDebug>
 
 void GameModel::addCommand(const QString& commandName)
 {
@@ -357,22 +374,38 @@ void GameModel::exportHTML(QString fileName) const {
 }
 
 void GameModel::exportCSV(QString fileName) const {
+    // preparing
+    QList<CommandModel*> sorted_commands = m_commands;
+    qSort(sorted_commands.begin(), sorted_commands.end(), sort_by_result());
+
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
     QTextStream out(&file);
     out.setGenerateByteOrderMark(true);
     out.setCodec("UTF-8");
 
-    out << QString("Название;Результат;Рейтинг");
+    out << QString(";Название;Результат;Рейтинг");
     int i; quint32 q;
     for (q = 0; q < m_questionCount; ++q) {
         out << QString(";%1").arg(q+1);
     }
     out << "\r\n";
-    for (i = 0; i < m_commands.size(); ++i) {
-        out << QString("\"%1\";%2;%3").arg(m_commands[i]->commandName()).arg(m_commands[i]->rightAnswersCount).arg(m_commands[i]->rating);
+    out << QString(";;;");
+    for (q = 0; q < m_questionCount; ++q) {
+        out << QString(";%1").arg(m_questionRating[q]);
+    }
+    out << "\r\n";
+
+    quint32 prevAnswersCount = -1, prevRating = -1, place = 0;
+    for (i = 0; i < sorted_commands.size(); ++i) {
+        if (prevAnswersCount != sorted_commands[i]->rightAnswersCount || prevRating != sorted_commands[i]->rating) {
+            prevAnswersCount = sorted_commands[i]->rightAnswersCount;
+            prevRating = sorted_commands[i]->rating;
+            place++;
+        }
+        out << QString("%4;\"%1\";%2;%3").arg(sorted_commands[i]->commandName()).arg(sorted_commands[i]->rightAnswersCount).arg(sorted_commands[i]->rating).arg(place);
         for (q = 0; q < m_questionCount; ++q) {
-            out << QString(";%1").arg(m_commands[i]->m_answers[q]==CommandModel::ANSWER_RIGHT?"+":"–");
+            out << QString(";%1").arg(sorted_commands[i]->m_answers[q]==CommandModel::ANSWER_RIGHT?"+":"–");
         }
         out << "\r\n";
     }
@@ -582,24 +615,6 @@ void GameModel::fixQuestion(int column)
     }
     layoutChanged();
 }
-
-struct sort_by_name {
-    // always asceding
-    bool operator() (const CommandModel *x, const CommandModel *y) {
-        return x->commandName() < y->commandName();
-    }
-};
-
-struct sort_by_result {
-    // always desceding
-    bool operator() (const CommandModel *x, const CommandModel *y) {
-        if (x->rightAnswersCount == y->rightAnswersCount) {
-            return x->rating > y->rating;
-        } else {
-            return x->rightAnswersCount > y->rightAnswersCount;
-        }
-    }
-};
 
 void GameModel::sort_by_criteria(SortCriteria criteria)
 {
