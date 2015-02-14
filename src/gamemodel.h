@@ -31,6 +31,7 @@ public:
     quint32 questionCount() { return m_questionCount; }
     bool save() const;
     bool save(QString fileName) const;
+    void exportJSON(QString fileName) const;
     void exportHTML(QString fileName) const;
     void exportCSV(QString fileName) const;
     bool load(QString fileName);
@@ -48,12 +49,12 @@ public slots:
     void empty(int col, int row);
     void printBlanks(QPrinter *printer) const;
     bool readFromScanner(const QString& text);
-    void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
     void fixQuestion(int column);
 
 private:
     QList<CommandModel*> m_commands;
     quint32 m_questionCount;
+    bool m_autoSave;
     QVector<qint32> m_questionRating;
     mutable QString m_fileName;
     mutable QString m_title;
@@ -65,6 +66,8 @@ private:
 
     void invertCommandResult(int commandNumber, quint32 question);
     void discardCommandResult(int commandNumber, quint32 question);
+    void autoSave();
+    QByteArray get_jsonResults() const;
 };
 
 #endif // GAMEMODEL_H

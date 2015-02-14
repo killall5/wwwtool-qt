@@ -9,7 +9,7 @@
 #include <cmath>
 #include "code128.h"
 #include <functional>
-
+#include <QDateTime>
 
 class CommandModel {
 public:
@@ -74,6 +74,13 @@ GameModel::GameModel(QObject *parent) :
     m_questionCount = 0;
     m_modified = false;
     m_fixedQuestion = 0;
+    m_autoSave = false;
+}
+
+void GameModel::autoSave() {
+    if (!m_autoSave || !m_modified || m_fileName.isEmpty()) return;
+    save();
+    exportJSON(m_fileName + ".json");
 }
 
 void GameModel::addCommand(const QString& commandName)
@@ -97,8 +104,9 @@ void GameModel::addCommand(const QString& commandName)
 
     beginInsertRows(index, m_commands.size(), m_commands.size());
     m_commands.push_back(command);
-    m_modified = true;
     endInsertRows();
+    m_modified = true;
+    autoSave();
 }
 
 void GameModel::setQuestionCount(quint32 questionCount)
@@ -141,6 +149,7 @@ void GameModel::setQuestionCount(quint32 questionCount)
         m_commands[i]->m_answers.resize(questionCount);
     }
     // update results (rating + right answers count)
+    autoSave();
 }
 
 int GameModel::rowCount(const QModelIndex &parent) const
@@ -316,6 +325,7 @@ bool GameModel::save(QString fileName) const {
 
     xml.writeStartElement("Options");
     xml.writeTextElement("QuestionCount", QString("%1").arg(m_questionCount));
+    xml.writeTextElement("AutoSave", QString("%1").arg(m_autoSave));
     xml.writeEndElement();
 
     xml.writeStartElement("Commands");
@@ -348,6 +358,42 @@ bool GameModel::save(QString fileName) const {
     return !xml.hasError();
 }
 
+
+QByteArray GameModel::get_jsonResults() const {
+    QByteArray jsonResults;
+    QString now = QDateTime::currentDateTime().toString(Qt::ISODate);
+    jsonResults.append(QString("{\"qc\":%1,\"updated\":\"%2\",\"res\":[").arg(m_questionCount).arg(now));
+    for (int i = 0; i < m_commands.size(); ++i) {
+        if (i) jsonResults += ",";
+        jsonResults += "["
+                "\"" + m_commands[i]->commandName() + "\"," +
+                QString("%1").arg(m_commands[i]->rightAnswersCount) + "," +
+                QString("%1").arg(m_commands[i]->rating) + "," +
+                "[";
+        bool comma = false;
+        for (quint32 q = 0; q < m_questionCount; ++q) {
+            if (m_commands[i]->m_answers[q] == CommandModel::ANSWER_RIGHT) {
+                if (comma) {
+                    jsonResults += ",";
+                } else {
+                    comma = true;
+                }
+                jsonResults += QString("%1").arg(q);
+            }
+        }
+        jsonResults += "]]";
+    }
+    jsonResults += "]}";
+    return jsonResults;
+}
+
+void GameModel::exportJSON(QString fileName) const {
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+    file.write(get_jsonResults());
+    file.close();
+}
+
 void GameModel::exportHTML(QString fileName) const {
     QFile source(":/templates/demo.tht");
     source.open(QIODevice::ReadOnly);
@@ -356,19 +402,7 @@ void GameModel::exportHTML(QString fileName) const {
 
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
-
-    QByteArray jsonResults;
-    jsonResults.append(QString("{\"qc\":%1,\"res\":[").arg(m_questionCount));
-    for (int i = 0; i < m_commands.size(); ++i) {
-        if (i) jsonResults += ",";
-        jsonResults += "{"
-                "\"n\":\"" + m_commands[i]->commandName() + "\","
-                "\"r\":" + QString("%1").arg(m_commands[i]->rating) + ","
-                "\"a\":" + QString("%1").arg(m_commands[i]->rightAnswersCount) + "}";
-    }
-    jsonResults += "]}";
-
-    templ.replace(QString("{/*Results*/}"), jsonResults);
+    templ.replace(QString("{/*Results*/}"), get_jsonResults());
     file.write(templ);
     file.close();
 }
@@ -423,6 +457,7 @@ bool GameModel::load(QString fileName) {
     //  http://www.developer.nokia.com/Community/Wiki/QXmlStreamReader_to_parse_XML_in_Qt
 
     quint32 l_questionCount = 0;
+    bool l_autoSave = false;
     QList<CommandModel *> l_commands;
     while (!xml.atEnd() && !xml.hasError()) {
         QXmlStreamReader::TokenType token = xml.readNext();
@@ -434,6 +469,10 @@ bool GameModel::load(QString fileName) {
             if (xml.name() == "QuestionCount") {
                 xml.readNext();
                 l_questionCount = xml.text().toString().toInt() ;
+            }
+            if (xml.name() == "AutoSave") {
+                xml.readNext();
+                l_autoSave = xml.text().toString().toInt();
             }
             if (xml.name() == "Command") {
                 CommandModel *command = new CommandModel;
@@ -469,6 +508,7 @@ bool GameModel::load(QString fileName) {
     m_commands.swap(l_commands);
 
     setQuestionCount(l_questionCount);
+    m_autoSave = l_autoSave;
 
     for (quint32 q = 0; q < l_questionCount; ++q) {
         m_questionRating[q] = 1;
@@ -557,6 +597,8 @@ void GameModel::invertCommandResult(int commandNumber, quint32 question) {
                 dataChanged(i, i);
             }
         }
+        m_modified = true;
+        autoSave();
     }
 }
 
@@ -569,14 +611,10 @@ void GameModel::discardCommandResult(int commandNumber, quint32 question)
             m_commands[commandNumber]->m_answers[question] = CommandModel::ANSWER_UNKNOWN;
             QModelIndex i = createIndex(commandNumber, question+1);
             dataChanged(i, i);
+            m_modified = true;
+            autoSave();
         }
     }
-}
-
-void GameModel::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
-{
-    m_modified = true;
-    QAbstractTableModel::dataChanged(topLeft, bottomRight, roles);
 }
 
 void GameModel::removeCommandsAtRows(const QSet<int>& rows)
@@ -602,8 +640,9 @@ void GameModel::removeCommandsAtRows(const QSet<int>& rows)
     foreach(int row, sorted_rows) {
         m_commands.removeAt(row);
     }
-    m_modified = true;
     endResetModel();
+    m_modified = true;
+    autoSave();
 }
 
 void GameModel::fixQuestion(int column)
