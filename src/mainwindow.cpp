@@ -32,7 +32,7 @@ void MainWindow::init()
 
     gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     connect(gameTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
-    connect(gameTable->horizontalHeader(), SIGNAL(sectionDoubleClicked(int)), m_model, SLOT(fixQuestion(int)));
+    connect(gameTable->horizontalHeader(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(fixQuestion(int)));
 
     setCentralWidget(gameTable);
 
@@ -298,4 +298,12 @@ void MainWindow::sortByTitle()
 void MainWindow::sortByResult()
 {
     m_model->sort_by_criteria(GameModel::SORT_BY_RESULT);
+}
+
+void MainWindow::fixQuestion(int number) {
+    ScannerManager::instance()->fixQuestion(number);
+}
+
+void MainWindow::onQuestionFixed(int number) {
+    m_model->fixQuestion(number);
 }

@@ -22,3 +22,9 @@ void ScannerManager::textScanned(const QString& text) {
     prevTime = dt;
     prevText = text;
 }
+
+void ScannerManager::fixQuestion(int number) {
+    foreach(ScannerManagerListener *i, clients) {
+        i->onQuestionFixed(number);
+    }
+}

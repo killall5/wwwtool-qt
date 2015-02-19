@@ -18,6 +18,7 @@ public:
     ~MainWindow();
 
     void onTextScanned(const QString &);
+    void onQuestionFixed(int);
     
 private:
     GameModel *m_model;
@@ -69,6 +70,7 @@ public slots:
     void closeEvent (QCloseEvent *event);
     void titleChanged();
     void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+    void fixQuestion(int);
 };
 
 #endif // MAINWINDOW_H

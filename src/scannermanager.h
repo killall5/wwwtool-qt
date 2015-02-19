@@ -6,6 +6,7 @@
 
 struct ScannerManagerListener {
     virtual void onTextScanned(const QString&) { }
+    virtual void onQuestionFixed(int) { }
 };
 
 class ScannerManager
@@ -22,6 +23,7 @@ public:
     }
 
     void textScanned(const QString& text);
+    void fixQuestion(int number);
 
 private:
     qint64 prevTime;

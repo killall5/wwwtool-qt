@@ -647,7 +647,7 @@ void GameModel::removeCommandsAtRows(const QSet<int>& rows)
 
 void GameModel::fixQuestion(int column)
 {
-    if (m_fixedQuestion == column) {
+    if (m_fixedQuestion == column || (quint32)column > m_questionCount) {
         m_fixedQuestion = 0;
     } else {
         m_fixedQuestion = column;
