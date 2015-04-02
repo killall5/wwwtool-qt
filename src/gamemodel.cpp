@@ -326,6 +326,7 @@ bool GameModel::save(QString fileName) const {
     xml.writeStartElement("Options");
     xml.writeTextElement("QuestionCount", QString("%1").arg(m_questionCount));
     xml.writeTextElement("AutoSave", QString("%1").arg(m_autoSave));
+    xml.writeTextElement("FixedQuestion", QString("%1").arg(m_fixedQuestion));
     xml.writeEndElement();
 
     xml.writeStartElement("Commands");
@@ -362,7 +363,7 @@ bool GameModel::save(QString fileName) const {
 QByteArray GameModel::get_jsonResults() const {
     QByteArray jsonResults;
     QString now = QDateTime::currentDateTime().toString(Qt::ISODate);
-    jsonResults.append(QString("{\"qc\":%1,\"updated\":\"%2\",\"res\":[").arg(m_questionCount).arg(now));
+    jsonResults.append(QString("{\"qc\":%1,\"updated\":\"%2\",\"fixed_question\":%3,\"res\":[").arg(m_questionCount).arg(now).arg(m_fixedQuestion));
     for (int i = 0; i < m_commands.size(); ++i) {
         if (i) jsonResults += ",";
         jsonResults += "["
@@ -458,6 +459,7 @@ bool GameModel::load(QString fileName) {
 
     quint32 l_questionCount = 0;
     bool l_autoSave = false;
+    int l_fixedQuestion = 0;
     QList<CommandModel *> l_commands;
     while (!xml.atEnd() && !xml.hasError()) {
         QXmlStreamReader::TokenType token = xml.readNext();
@@ -473,6 +475,10 @@ bool GameModel::load(QString fileName) {
             if (xml.name() == "AutoSave") {
                 xml.readNext();
                 l_autoSave = xml.text().toString().toInt();
+            }
+            if (xml.name() == "FixedQuestion") {
+                xml.readNext();
+                l_fixedQuestion = xml.text().toString().toInt();
             }
             if (xml.name() == "Command") {
                 CommandModel *command = new CommandModel;
@@ -509,6 +515,7 @@ bool GameModel::load(QString fileName) {
 
     setQuestionCount(l_questionCount);
     m_autoSave = l_autoSave;
+    m_fixedQuestion = l_fixedQuestion;
 
     for (quint32 q = 0; q < l_questionCount; ++q) {
         m_questionRating[q] = 1;
@@ -653,6 +660,8 @@ void GameModel::fixQuestion(int column)
         m_fixedQuestion = column;
     }
     layoutChanged();
+    m_modified = true;
+    autoSave();
 }
 
 void GameModel::sort_by_criteria(SortCriteria criteria)
