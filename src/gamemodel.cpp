@@ -202,7 +202,7 @@ QVariant GameModel::headerData(int section, Qt::Orientation orientation, int rol
             return QString("%1").arg(section);
         }
     } else if (orientation == Qt::Vertical) {
-        return QVariant(m_commands[section]->commandName());
+        return m_commands[section]->commandName();
     }
     return QVariant();
 }
