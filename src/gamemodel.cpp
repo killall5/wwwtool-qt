@@ -38,6 +38,8 @@ public:
     QVector<CommandAnswer> m_answers;
     quint32 rightAnswersCount;
     quint32 rating;
+    QString m_commandId;
+    QString m_commandLocation;
 private:
     QString m_commandName;
     quint32 m_commandNameHash;
@@ -334,6 +336,12 @@ bool GameModel::save(QString fileName) const {
         CommandModel *command = m_commands[i];
         xml.writeStartElement("Command");
         xml.writeTextElement("Name", command->commandName());
+        if (!command->m_commandId.isEmpty()) {
+            xml.writeTextElement("Id", command->m_commandId);
+        }
+        if (!command->m_commandLocation.isEmpty()) {
+            xml.writeTextElement("Location", command->m_commandLocation);
+        }
         for (quint32 q = 0; q < m_questionCount; ++q) {
             if (command->m_answers[q] != CommandModel::ANSWER_UNKNOWN) {
                 xml.writeStartElement("Question");
@@ -363,7 +371,9 @@ bool GameModel::save(QString fileName) const {
 QByteArray GameModel::get_jsonResults() const {
     QByteArray jsonResults;
     QString now = QDateTime::currentDateTime().toString(Qt::ISODate);
-    jsonResults.append(QString("{\"qc\":%1,\"updated\":\"%2\",\"fixed_question\":%3,\"res\":[").arg(m_questionCount).arg(now).arg(m_fixedQuestion));
+    jsonResults.append(QString("{\"qc\":%1,\"updated\":\"%2\",\"fixed_question\":%3,").arg(m_questionCount).arg(now).arg(m_fixedQuestion));
+    jsonResults.append(QString("\"format\":{\"name\":0,\"right_answers_count\":1,\"rating\":2,\"right_answers_array\":3,\"id\":4,\"location\":5},"));
+    jsonResults.append(QString("\"res\":["));
     for (int i = 0; i < m_commands.size(); ++i) {
         if (i) jsonResults += ",";
         jsonResults += "["
@@ -382,7 +392,10 @@ QByteArray GameModel::get_jsonResults() const {
                 jsonResults += QString("%1").arg(q);
             }
         }
-        jsonResults += "]]";
+        jsonResults += "],"
+                       "\"" + m_command[i]->m_commandId + "\","
+                       "\"" + m_command[i]->m_commandLocation + "\""
+                       "]";
     }
     jsonResults += "]}";
     return jsonResults;
@@ -487,6 +500,12 @@ bool GameModel::load(QString fileName) {
                         if (xml.name() == "Name") {
                             xml.readNext();
                             command->setCommandName(xml.text().toString());
+                        } else if (xml.name() == "Id") {
+                            xml.readNext();
+                            command->m_commandId = xml.text().toString();
+                        } else if (xml.name() == "Location") {
+                            xml.readNext();
+                            command->m_commandLocation = xml.text().toString();
                         } else if (xml.name() == "Question") {
                             QXmlStreamAttributes attr = xml.attributes();
                             if (attr.hasAttribute("number") && attr.hasAttribute("value")) {
