@@ -82,6 +82,9 @@ void MainWindow::createActions()
     printBlanksAct->setShortcut(QKeySequence::Print);
     connect(printBlanksAct, SIGNAL(triggered()), this, SLOT(printBlanks()));
 
+    printTablesAct = new QAction(tr("Бланки рассадки..."), this);
+    connect(printTablesAct, SIGNAL(triggered()), this, SLOT(printTables()));
+
     addCommandAct = new QAction(tr("Добавить команду..."), this);
     connect(addCommandAct, SIGNAL(triggered()), this, SLOT(addCommand()));
 
@@ -122,6 +125,7 @@ void MainWindow::createMenus()
     gameMenu->addAction(closeGameAct);
     gameMenu->addSeparator();
     gameMenu->addAction(printBlanksAct);
+    gameMenu->addAction(printTablesAct);
 
     QMenu *commandsMenu = menuBar()->addMenu(tr("Команды"));
     commandsMenu->addAction(addCommandAct);
@@ -198,6 +202,21 @@ void MainWindow::printBlanks()
 
     m_model->printBlanks(&printer);
 }
+
+void MainWindow::printTables()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export tables"), QString(), tr("PDF (*.pdf)"));
+
+    if (fileName.isEmpty()) return;
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(fileName);
+
+    m_model->printTables(&printer);
+}
+
+
 
 void MainWindow::addCommand()
 {

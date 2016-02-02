@@ -10,6 +10,7 @@
 #include "code128.h"
 #include <functional>
 #include <QDateTime>
+#include <QMarginsF>
 
 class CommandModel {
 public:
@@ -40,6 +41,7 @@ public:
     quint32 rating;
     QString m_commandId;
     QString m_commandLocation;
+    QString m_tableNumber;
 private:
     QString m_commandName;
     quint32 m_commandNameHash;
@@ -202,7 +204,14 @@ QVariant GameModel::headerData(int section, Qt::Orientation orientation, int rol
             return QString("%1").arg(section);
         }
     } else if (orientation == Qt::Vertical) {
-        return m_commands[section]->commandName();
+        QString ret = m_commands[section]->commandName();
+        if (!m_commands[section]->m_tableNumber.isEmpty()) {
+            ret = m_commands[section]->m_tableNumber + " " + ret;
+        }
+        if (!m_commands[section]->m_commandLocation.isEmpty()) {
+            ret = ret + ", " + m_commands[section]->m_commandLocation;
+        }
+        return ret;
     }
     return QVariant();
 }
@@ -294,6 +303,120 @@ void GameModel::printBlanks(QPrinter *printer) const
     }
 }
 
+void drawTableSide(QPainter* painter, CommandModel* const command) {
+    QString commandName = command->commandName();
+    QString commandLocation = command->m_commandLocation;
+    QString table;
+    if (!command->m_tableNumber.isEmpty()) {
+        table = command->m_tableNumber;
+    }
+
+    QPen defaultPen(QColor(0, 0, 0));
+    QPen locationPen(QColor(0, 0, 0, 64));
+
+    QFont font;
+    QRectF rect = painter->clipBoundingRect();
+    rect = rect.marginsRemoved(QMarginsF(rect.width()/40, 0, rect.width()/40, 0));
+
+    QRectF tableRect = rect;
+    tableRect.setWidth(rect.width()/3);
+
+    QRectF nameRect = rect;
+    nameRect.setLeft(tableRect.right());
+    nameRect.setWidth(rect.width() - tableRect.width());
+    nameRect.setHeight(nameRect.height()/2);
+
+    QRectF locationRect = nameRect;
+    locationRect.moveTop(nameRect.bottom());
+
+    qreal margin = rect.width()/60;
+    QMarginsF margins(margin, margin, margin, margin);
+    tableRect -= margins;
+    nameRect -= margins;
+    locationRect -= margins;
+
+    font = painter->font();
+    font.setPointSize(160);
+    painter->setFont(font);
+
+    painter->setPen(defaultPen);
+    painter->drawText(tableRect, Qt::AlignCenter, table);
+
+    font.setPointSizeF(font.pointSizeF()/4);
+    painter->setFont(font);
+    painter->drawText(nameRect, Qt::AlignBottom|Qt::TextWordWrap, commandName);
+
+    font.setPointSizeF(font.pointSizeF()/2);
+    painter->setFont(font);
+    painter->setPen(locationPen);
+    painter->drawText(locationRect, Qt::AlignTop|Qt::TextWordWrap, commandLocation);
+}
+
+void GameModel::printTables(QPrinter *printer) const
+{
+    QPainter painter(printer);
+    QRectF clipRect = painter.viewport();
+    qreal margin = clipRect.height()/7;
+    clipRect.setHeight(3*margin);
+    QVector<qreal> dashPattern;
+    QPen linePen(QColor(0, 0, 0));
+    dashPattern << clipRect.width()/48 << clipRect.width()/24 << clipRect.width()/48 << 0;
+    linePen.setDashPattern(dashPattern);
+
+    QRectF helperRect = QRect(0, 0, painter.viewport().width(), 0.5*margin);
+    QFont helperFont = painter.font();
+    helperFont.setPointSize(16);
+    QPen helperPen = QPen(QColor(0, 0, 0));
+    QString helperText = "Скрепить здесь";
+
+    for (int i = 0; i < m_commands.size(); ++i) {
+        // top command info
+        painter.resetTransform();
+        painter.translate(0, 0.5*margin);
+        painter.setClipRect(clipRect);
+        painter.rotate(180);
+
+        drawTableSide(&painter, m_commands[i]);
+
+        // bottom command info
+        painter.resetTransform();
+        painter.translate(0, 3.5*margin);
+        painter.setClipRect(clipRect);
+
+        drawTableSide(&painter, m_commands[i]);
+
+        // top cut helper
+        painter.resetTransform();
+        painter.setClipRect(helperRect);
+        painter.rotate(180);
+
+        painter.setFont(helperFont);
+        painter.setPen(helperPen);
+        painter.drawText(painter.clipBoundingRect(), Qt::AlignCenter, helperText);
+
+        // bottom cut helper
+        painter.resetTransform();
+        painter.translate(0, 6.5*margin);
+        painter.setClipRect(helperRect);
+
+        painter.setFont(helperFont);
+        painter.setPen(helperPen);
+        painter.drawText(helperRect, Qt::AlignCenter, helperText);
+
+        // cut lines
+        painter.setClipping(false);
+        painter.resetTransform();
+        painter.setPen(linePen);
+        painter.drawLine(0, 0.5*margin, painter.viewport().width(), 0.5*margin);
+        painter.drawLine(0, 3.5*margin, painter.viewport().width(), 3.5*margin);
+        painter.drawLine(0, 6.5*margin, painter.viewport().width(), 6.5*margin);
+
+        if (i < m_commands.size() - 1) {
+            printer->newPage();
+        }
+    }
+}
+
 QString GameModel::toBarcodeText(quint32 hash, quint32 question) const
 {
     quint64 res = (quint64)hash << 32 | question;
@@ -342,6 +465,9 @@ bool GameModel::save(QString fileName) const {
         if (!command->m_commandLocation.isEmpty()) {
             xml.writeTextElement("Location", command->m_commandLocation);
         }
+        if (!command->m_tableNumber.isEmpty()) {
+            xml.writeTextElement("Table", command->m_tableNumber);
+        }
         for (quint32 q = 0; q < m_questionCount; ++q) {
             if (command->m_answers[q] != CommandModel::ANSWER_UNKNOWN) {
                 xml.writeStartElement("Question");
@@ -372,7 +498,7 @@ QByteArray GameModel::get_jsonResults() const {
     QByteArray jsonResults;
     QString now = QDateTime::currentDateTime().toString(Qt::ISODate);
     jsonResults.append(QString("{\"qc\":%1,\"updated\":\"%2\",\"fixed_question\":%3,").arg(m_questionCount).arg(now).arg(m_fixedQuestion));
-    jsonResults.append(QString("\"format\":{\"name\":0,\"right_answers_count\":1,\"rating\":2,\"right_answers_array\":3,\"id\":4,\"location\":5},"));
+    jsonResults.append(QString("\"format\":{\"name\":0,\"right_answers_count\":1,\"rating\":2,\"right_answers_array\":3,\"id\":4,\"location\":5,\"table\":6},"));
     jsonResults.append(QString("\"res\":["));
     for (int i = 0; i < m_commands.size(); ++i) {
         if (i) jsonResults += ",";
@@ -393,8 +519,9 @@ QByteArray GameModel::get_jsonResults() const {
             }
         }
         jsonResults += "],"
-                       "\"" + m_command[i]->m_commandId + "\","
-                       "\"" + m_command[i]->m_commandLocation + "\""
+                       "\"" + m_commands[i]->m_commandId + "\","
+                       "\"" + m_commands[i]->m_commandLocation + "\""
+                       "\"" + m_commands[i]->m_tableNumber + "\""
                        "]";
     }
     jsonResults += "]}";
@@ -506,6 +633,9 @@ bool GameModel::load(QString fileName) {
                         } else if (xml.name() == "Location") {
                             xml.readNext();
                             command->m_commandLocation = xml.text().toString();
+                        } else if (xml.name() == "Table") {
+                            xml.readNext();
+                            command->m_tableNumber = xml.text().toString();
                         } else if (xml.name() == "Question") {
                             QXmlStreamAttributes attr = xml.attributes();
                             if (attr.hasAttribute("number") && attr.hasAttribute("value")) {

@@ -36,6 +36,7 @@ private:
     QAction *loadGameAct;
     QAction *closeGameAct;
     QAction *printBlanksAct;
+    QAction *printTablesAct;
 
     QAction *exportHTMLAct;
     QAction *exportCSVAct;
@@ -54,6 +55,7 @@ public slots:
     void loadGame();
     void saveGame();
     void printBlanks();
+    void printTables();
 
     void exportHTML();
     void exportCSV();

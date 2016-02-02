@@ -48,6 +48,7 @@ public slots:
     void click(int col, int row);
     void empty(int col, int row);
     void printBlanks(QPrinter *printer) const;
+    void printTables(QPrinter *printer) const;
     bool readFromScanner(const QString& text);
     void fixQuestion(int column);
 
