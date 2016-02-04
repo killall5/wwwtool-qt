@@ -319,12 +319,15 @@ void drawTableSide(QPainter* painter, CommandModel* const command) {
     rect = rect.marginsRemoved(QMarginsF(rect.width()/40, 0, rect.width()/40, 0));
 
     QRectF tableRect = rect;
-    tableRect.setWidth(rect.width()/3);
+    tableRect.setWidth(rect.width()*5/12);
+    tableRect.setHeight(tableRect.width());
+    tableRect.moveTop(rect.top() + rect.height()/12);
 
-    QRectF nameRect = rect;
+    QRectF nameRect;
+    nameRect.setTop(rect.top() + rect.height()/6);
     nameRect.setLeft(tableRect.right());
     nameRect.setWidth(rect.width() - tableRect.width());
-    nameRect.setHeight(nameRect.height()/2);
+    nameRect.setHeight(rect.height()/2);
 
     QRectF locationRect = nameRect;
     locationRect.moveTop(nameRect.bottom());
@@ -335,18 +338,33 @@ void drawTableSide(QPainter* painter, CommandModel* const command) {
     nameRect -= margins;
     locationRect -= margins;
 
+    const qreal BASE_FONT_SIZE = 160;
     font = painter->font();
-    font.setPointSize(160);
+    font.setPointSizeF(BASE_FONT_SIZE);
     painter->setFont(font);
 
     painter->setPen(defaultPen);
-    painter->drawText(tableRect, Qt::AlignCenter, table);
+//    QBrush red(QColor(255,0,0));
+//    painter->fillRect(tableRect, red);
+    painter->drawText(tableRect, Qt::AlignTop|Qt::AlignHCenter, table);
 
-    font.setPointSizeF(font.pointSizeF()/4);
-    painter->setFont(font);
-    painter->drawText(nameRect, Qt::AlignBottom|Qt::TextWordWrap, commandName);
+    font.setPointSizeF(BASE_FONT_SIZE/4);
+    bool accept = false;
+    QRectF requiredRect;
+    while (!accept) {
+        painter->setFont(font);
+        requiredRect = painter->boundingRect(nameRect, Qt::TextWordWrap, commandName);
+        accept = nameRect.contains(requiredRect);
+        font.setPointSizeF(font.pointSizeF()-1);
+    }
+//    QBrush blue(QColor(0,0,255));
+//    painter->fillRect(requiredRect, blue);
+    painter->drawText(nameRect, Qt::AlignTop|Qt::TextWordWrap, commandName);
 
-    font.setPointSizeF(font.pointSizeF()/2);
+    locationRect.moveTop(locationRect.top() - (nameRect.height() - requiredRect.height()));
+//    QBrush green(QColor(0,255,0));
+//    painter->fillRect(locationRect, green);
+    font.setPointSizeF(BASE_FONT_SIZE/8);
     painter->setFont(font);
     painter->setPen(locationPen);
     painter->drawText(locationRect, Qt::AlignTop|Qt::TextWordWrap, commandLocation);
@@ -355,24 +373,25 @@ void drawTableSide(QPainter* painter, CommandModel* const command) {
 void GameModel::printTables(QPrinter *printer) const
 {
     QPainter painter(printer);
-    QRectF clipRect = painter.viewport();
-    qreal margin = clipRect.height()/7;
-    clipRect.setHeight(3*margin);
     QVector<qreal> dashPattern;
     QPen linePen(QColor(0, 0, 0));
-    dashPattern << clipRect.width()/48 << clipRect.width()/24 << clipRect.width()/48 << 0;
+    dashPattern << painter.viewport().width()/48 << painter.viewport().width()/24 << painter.viewport().width()/48 << 0;
     linePen.setDashPattern(dashPattern);
 
-    QRectF helperRect = QRect(0, 0, painter.viewport().width(), 0.5*margin);
+    QRectF helperRect = QRect(0, 0, painter.viewport().width(), painter.viewport().height()/2/3);
     QFont helperFont = painter.font();
     helperFont.setPointSize(16);
     QPen helperPen = QPen(QColor(0, 0, 0));
     QString helperText = "Скрепить здесь";
 
+    QRectF clipRect = painter.viewport();
+//    qreal margin = clipRect.height()/7;
+    clipRect.setHeight(clipRect.height()/2 - helperRect.height());
+
     for (int i = 0; i < m_commands.size(); ++i) {
         // top command info
         painter.resetTransform();
-        painter.translate(0, 0.5*margin);
+        painter.translate(0, helperRect.height());
         painter.setClipRect(clipRect);
         painter.rotate(180);
 
@@ -380,7 +399,7 @@ void GameModel::printTables(QPrinter *printer) const
 
         // bottom command info
         painter.resetTransform();
-        painter.translate(0, 3.5*margin);
+        painter.translate(0, helperRect.height() + clipRect.height());
         painter.setClipRect(clipRect);
 
         drawTableSide(&painter, m_commands[i]);
@@ -396,7 +415,7 @@ void GameModel::printTables(QPrinter *printer) const
 
         // bottom cut helper
         painter.resetTransform();
-        painter.translate(0, 6.5*margin);
+        painter.translate(0, helperRect.height() + 2*clipRect.height());
         painter.setClipRect(helperRect);
 
         painter.setFont(helperFont);
@@ -407,9 +426,9 @@ void GameModel::printTables(QPrinter *printer) const
         painter.setClipping(false);
         painter.resetTransform();
         painter.setPen(linePen);
-        painter.drawLine(0, 0.5*margin, painter.viewport().width(), 0.5*margin);
-        painter.drawLine(0, 3.5*margin, painter.viewport().width(), 3.5*margin);
-        painter.drawLine(0, 6.5*margin, painter.viewport().width(), 6.5*margin);
+        painter.drawLine(0, helperRect.height(), painter.viewport().width(), helperRect.height());
+        painter.drawLine(0, helperRect.height() + clipRect.height(), painter.viewport().width(), helperRect.height() + clipRect.height());
+        painter.drawLine(0, helperRect.height() + 2*clipRect.height(), painter.viewport().width(), helperRect.height() + 2*clipRect.height());
 
         if (i < m_commands.size() - 1) {
             printer->newPage();
