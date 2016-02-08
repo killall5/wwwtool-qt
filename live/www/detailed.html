@@ -16,7 +16,7 @@
 <nav class="navbar navbar-default">
 <div class="container">
   <div class="navbar-header">
-    <a class="navbar-brand">ПерСиб-2015</a>
+    <a class="navbar-brand">ПерСиб</a>
   </div>
   <div class="collapse navbar-collapse">
     <ul class="nav navbar-nav">
@@ -34,13 +34,16 @@
     </div>
   </div>
   <div class="row">
-    <div class="col-md-12">
-      <p id="fixed_question"></p>
+      <div class="col-md-12">
+          <p id="fixed_question"></p>
     </div>
     <div class="col-md-12 table-responsive" id="results"></div>
   </div>
 </div>
 <script><!--
+var YEAR = document.location.pathname.split('/')[2];
+$('.navbar-brand').html('ПерСиб-' + YEAR);
+
 Element.prototype.appendCell = function(tag, id, text, className) {
     var elem = document.createElement(tag);
     if (id) elem.id = id;
@@ -62,7 +65,7 @@ var commands = 0, answers = 0, updated = null, questions_in_round = 15,
     e_title = document.getElementById("title"),
     e_results = document.getElementById("results"),
     e_fixed_question = document.getElementById("fixed_question"),
-    Results, default_sort = true;
+    Results, Format, default_sort = true;
 
 function createTable(commands, answers) {
     var i, j, th, a, span;
@@ -101,8 +104,8 @@ function createTable(commands, answers) {
     th.appendChild(a);
     header_row.appendChild(th);
 
-    header_row.appendCell('th', null, 'Ответов')
-        .appendCell('th', null, 'Рейтинг');
+    header_row.appendCell('th', null, 'Город');
+    header_row.appendCell('th', null, 'Ответов').appendCell('th', null, 'Рейтинг');
     for (j = 0; j < answers; ++j) {
         round = Math.floor(j/questions_in_round);
         if (j % questions_in_round === 0) {
@@ -125,6 +128,7 @@ function createTable(commands, answers) {
         command_row = document.createElement('tr')
             .appendCell('td', 'cmd_' + i + '_place')
             .appendCell('td', 'cmd_' + i + '_title')
+            .appendCell('td', 'cmd_' + i + '_location')
             .appendCell('td', 'cmd_' + i + '_answers')
             .appendCell('td', 'cmd_' + i + '_rating');
         for (j = 0; j < answers; ++j) {
@@ -140,25 +144,22 @@ function createTable(commands, answers) {
     return the_table;
 }
 
-function fillTable(results) {
+function fillTable(results, format) {
     var i, j, undef;
-    if (results === undef) {
-        results = Results.slice();
-    } else {
-        Results = results.slice();
-    }
     if (!default_sort) {
+	results = results.slice();
         results.sort(
             function(x, y) {
-                return x[0]>y[0]?1:-1;
+                return x[format.name]>y[format.name]?1:-1;
             }
         );
     }
     for (i = 0; i < commands; ++i) {
-        document.getElementById('cmd_' + i + '_place').cleanUp().appendChild(document.createTextNode(results[i][3]));
-        document.getElementById('cmd_' + i + '_title').cleanUp().appendChild(document.createTextNode(results[i][0]));
-        document.getElementById('cmd_' + i + '_answers').cleanUp().appendChild(document.createTextNode(results[i][1]));
-        document.getElementById('cmd_' + i + '_rating').cleanUp().appendChild(document.createTextNode(results[i][2]));
+        document.getElementById('cmd_' + i + '_place').cleanUp().appendChild(document.createTextNode(results[i][format.place]));
+        document.getElementById('cmd_' + i + '_title').cleanUp().appendChild(document.createTextNode(results[i][format.name]));
+        document.getElementById('cmd_' + i + '_location').cleanUp().appendChild(document.createTextNode(results[i][format.location]));
+        document.getElementById('cmd_' + i + '_answers').cleanUp().appendChild(document.createTextNode(results[i][format.right_answers_count]));
+        document.getElementById('cmd_' + i + '_rating').cleanUp().appendChild(document.createTextNode(results[i][format.rating]));
         var rounds = [];
         for (j = 0; j < answers / questions_in_round; ++j) {
             rounds[j] = 0;
@@ -166,9 +167,9 @@ function fillTable(results) {
         for (j = 0; j < answers; ++j) {
             document.getElementById('cmd_' + i + '_' + j).cleanUp();
         }
-        for (j = 0; j < results[i][4].length; ++j) {
-            document.getElementById('cmd_' + i + '_' + results[i][4][j]).appendChild(document.createTextNode('+'));
-            rounds[Math.floor(results[i][4][j]/questions_in_round)]++;
+        for (j = 0; j < results[i][format.right_answers_array].length; ++j) {
+            document.getElementById('cmd_' + i + '_' + results[i][format.right_answers_array][j]).appendChild(document.createTextNode('+'));
+            rounds[Math.floor(results[i][format.right_answers_array][j]/questions_in_round)]++;
         }
         for (j = 0; j < answers / questions_in_round; ++j) {
             document.getElementById('cmd_' + i + '_round_' + j).cleanUp().appendChild(document.createTextNode(rounds[j]));
@@ -182,7 +183,7 @@ function refreshResult(url) {
         if (data.updated === updated) return;
         updated = data.updated;
         e_title.innerHTML = data.title + ', результаты ЧГК';
-        document.title = data.title + ' — Результаты ЧГК — ПерСиб-2015';
+        document.title = data.title + ' — Результаты ЧГК — ПерСиб-' + YEAR;
         if (data.res.length !== commands || data.qc !== answers) {
             commands = data.res.length;
             answers = data.qc;
@@ -195,12 +196,14 @@ function refreshResult(url) {
         } else {
             e_fixed_question.innerHTML = 'Ввод ответов завершен.';
         }
-        e_fixed_question.innerHTML = 'Игра окончена.';
-        fillTable(data.res);
+            //e_fixed_question.innerHTML = 'Игра окончена.';
+        Results = data.res;
+        Format = data.format
+        fillTable(Results, Format);
     }).fail(function() {
         updated = null;
     }).always(function(){
-        //setTimeout(function(){ refreshResult(url); }, 10001);
+        setTimeout(function(){ refreshResult(url); }, 10001);
     })
 }
 
@@ -213,19 +216,19 @@ $('#results').on('click', 'a.toggle-sort', function() {
     default_sort = this.id === 'default_sort';
     $('.glyphicon-sort-by-attributes').addClass('hidden');
     $(this).siblings('span').removeClass('hidden');
-    fillTable();
+    fillTable(Results, Format);
     return false;
 });
 
-/*setInterval(function() {
+setInterval(function() {
     if (!updated_datetime) return;
     var s = Math.floor((new Date() - updated_datetime)/1000);
     e_updated.innerHTML = 'Данные обновлены ';
     if (s > 0) e_updated.innerHTML += s + ' сек назад';
-}, 1000);*/
+}, 1000);
 group = location.search.substring(1)
 document.getElementById('group' + group).className = 'active';
-refreshResult('http://live.nado-nsk.ru/superiority/2015/' + group + '.json');
+refreshResult(group + '.json');
 //--></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <!-- Yandex.Metrika counter -->
