@@ -539,7 +539,7 @@ QByteArray GameModel::get_jsonResults() const {
         }
         jsonResults += "],"
                        "\"" + m_commands[i]->m_commandId + "\","
-                       "\"" + m_commands[i]->m_commandLocation + "\""
+                       "\"" + m_commands[i]->m_commandLocation + "\","
                        "\"" + m_commands[i]->m_tableNumber + "\""
                        "]";
     }
