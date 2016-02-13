@@ -243,21 +243,17 @@ void GameModel::printBlanks(QPrinter *printer) const
     dashPattern << cellHeight/24 << cellHeight/24 << cellHeight/24 << 0;
     defaultVPen.setDashPattern(dashPattern);
 
-    QPen questionPen(QColor(0, 0, 0, 32));
-
     int pagesCount = ceil(m_questionCount*1.0/COLS/ROWS);
-    QFont questionFont = painter.font();
-    qreal ratio = cellHeight/2 / painter.fontMetrics().boundingRect(QString("%1").arg(m_questionCount)).size().height();
-    questionFont.setPointSizeF(questionFont.pointSizeF()*ratio);
 
     painter.setBrush(QBrush(Qt::SolidPattern));
 
+    QFont defaultFont(painter.font());
+    defaultFont.setPointSize(16);
+    painter.setFont(defaultFont);
+    QRectF questionBounds;
+
     for (int command=0; command < m_commands.size(); ++command) {
         QString commandName = m_commands[command]->commandName();
-
-        QFont commandNameFont(painter.font());
-        ratio = cellWidth*0.85 / painter.fontMetrics().boundingRect(commandName).size().width();
-        commandNameFont.setPointSizeF(qMin(14.0, painter.font().pointSizeF()*ratio));
 
         for (int page=0; page < pagesCount; ++page) {
             quint32 col, row, q;
@@ -274,18 +270,26 @@ void GameModel::printBlanks(QPrinter *printer) const
                 for (col=0; col < COLS; ++col) {
                     q=page*COLS*ROWS+col+row*COLS+1;
 
-                    painter.setPen(defaultPen);
-                    painter.setFont(commandNameFont);
-                    QRect bounds = painter.fontMetrics().boundingRect(commandName);
-                    painter.drawText(col*cellWidth + cellWidth/20, row*cellHeight + cellHeight/20, cellWidth*0.90, bounds.height(), Qt::AlignTop|Qt::AlignHCenter, commandName);
+                    QRectF commandRect(col*cellWidth + cellWidth/20, row*cellHeight + cellHeight/20, cellWidth*3/4, cellHeight/4);
+                    QFont font(defaultFont);
+                    bool accept = false;
+                    QRectF requiredRect;
+                    while (!accept) {
+                        painter.setFont(font);
+                        requiredRect = painter.boundingRect(commandRect, Qt::TextWordWrap, commandName);
+                        accept = commandRect.contains(requiredRect);
+                        font.setPointSizeF(font.pointSizeF()-1);
+                    }
+
+                    painter.drawText(commandRect, Qt::AlignTop|Qt::AlignLeft|Qt::TextWordWrap, commandName);
 
                     QRectF barcodeRect(col*cellWidth + cellWidth/4, (row+1)*cellHeight - cellHeight/20 - cellWidth/6, cellWidth/2, cellWidth/6);
                     if (q <= m_questionCount) {
                         Code128::drawBarcode(toBarcodeText(m_commands[command]->commandNameHash(), q), painter, barcodeRect);
 
-                        painter.setPen(questionPen);
-                        painter.setFont(questionFont);
-                        painter.drawText(col*cellWidth, row*cellHeight + cellHeight/20 + bounds.height(), cellWidth, barcodeRect.top() - (row*cellHeight + cellHeight/20 + bounds.height()), Qt::AlignCenter, QString("%1").arg(q));
+                        QRectF questionRect(col*cellWidth + cellWidth*3/4, row*cellHeight + cellHeight/20, cellWidth/4 - cellWidth/20, cellHeight/2);
+                        painter.setFont(defaultFont);
+                        painter.drawText(questionRect, Qt::AlignTop|Qt::AlignRight, QString("%1").arg(q));
                     } else {
                         Code128::drawBarcode(toBarcodeText(m_commands[command]->commandNameHash()), painter, barcodeRect);
                     }
