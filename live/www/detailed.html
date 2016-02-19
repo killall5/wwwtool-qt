@@ -17,8 +17,14 @@
 <div class="container">
   <div class="navbar-header">
     <a class="navbar-brand">ПерСиб</a>
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-navbar-collapse">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </button>
   </div>
-  <div class="collapse navbar-collapse">
+  <div class="collapse navbar-collapse" id="bs-navbar-collapse">
     <ul class="nav navbar-nav">
       <li id="group0"><a href="?0">Школьники</a></li>
       <li id="group1"><a href="?1">Студенты</a><li>
@@ -226,7 +232,8 @@ setInterval(function() {
     e_updated.innerHTML = 'Данные обновлены ';
     if (s > 0) e_updated.innerHTML += s + ' сек назад';
 }, 1000);
-group = location.search.substring(1)
+group = location.search.substring(1);
+if (!group) group = '0';
 document.getElementById('group' + group).className = 'active';
 refreshResult(group + '.json');
 //--></script>
