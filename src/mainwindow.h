@@ -10,6 +10,8 @@
 
 #include "scannermanager.h"
 
+class QMediaPlayer;
+
 class MainWindow : public QMainWindow, public ScannerManagerListener
 {
     Q_OBJECT
@@ -48,6 +50,7 @@ private:
 
     QAction *questionCountAct;
     QTimer *timer;
+    QMediaPlayer *player;
 signals:
     
 public slots:

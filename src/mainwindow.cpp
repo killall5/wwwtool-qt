@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QMessageBox>
+#include <QMediaPlayer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -48,6 +49,8 @@ void MainWindow::init()
     timer = new QTimer(this);
     timer->setSingleShot(true);
     connect(timer, SIGNAL(timeout()), this, SLOT(timerFinished()));
+
+    player = new QMediaPlayer;
 }
 
 MainWindow::~MainWindow()
@@ -58,6 +61,7 @@ MainWindow::~MainWindow()
     delete gameTable;
     delete m_model;
     delete timer;
+    delete player;
 }
 
 void MainWindow::createActions()
@@ -272,12 +276,17 @@ void MainWindow::onTextScanned(const QString &text)
 
     QPalette p = originalPalette;
     if (m_model->readFromScanner(text)) {
+        player->setMedia(QUrl("qrc:/positive.wav"));
         p.setColor(QPalette::Base, QColor("green"));
     } else {
+        player->setMedia(QUrl("qrc:/negative.wav"));
         p.setColor(QPalette::Base, QColor("red"));
     }
     gameTable->setPalette(p);
+    timer->stop();
     timer->start(100);
+    player->setVolume(100);
+    player->play();
 }
 
 void MainWindow::timerFinished()

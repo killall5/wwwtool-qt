@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>templates/demo.tht</file>
+        <file>negative.wav</file>
+        <file>positive.wav</file>
     </qresource>
 </RCC>
