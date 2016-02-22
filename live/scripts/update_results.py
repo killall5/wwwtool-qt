@@ -42,9 +42,15 @@ def main():
             format = data['format']
 
             uniq_res = {}
+            uniq_ans = {}
             data['res'] = sorted(data['res'], key=lambda cmd: (-cmd[i_rac], -cmd[i_rating], cmd[i_name]))
             for r in data['res']:
                 cmd_res = '%d.%d' % (r[i_rac], r[i_rating])
+                cmd_ans = '%d' % (r[i_rac], )
+                if cmd_ans in uniq_ans:
+                    uniq_ans[cmd_ans] += 1
+                else:
+                    uniq_ans[cmd_ans] = 0
                 if cmd_res in uniq_res:
                     uniq_res[cmd_res] += 1
                 else:
@@ -54,11 +60,17 @@ def main():
             _a = _r = -1
             for r in data['res']:
                 cmd_res = '%d.%d' % (r[i_rac], r[i_rating])
-                if r[i_rac] != _a or r[i_rating] != _r:
-                    _a = r[i_rac]
-                    _r = r[i_rating]
-                    place_min = place_max + 1
-                    place_max = place_min + uniq_res[cmd_res]
+                cmd_ans = '%d' % (r[i_rac], )
+                if place_min < 4:
+                    if r[i_rac] != _a:
+                        place_min = place_max + 1
+                        place_max = place_min + uniq_ans[cmd_ans]
+                else:
+                    if r[i_rac] != _a or r[i_rating] != _r:
+                        place_min = place_max + 1
+                        place_max = place_min + uniq_res[cmd_res]
+                _a = r[i_rac]
+                _r = r[i_rating]
                 if place_min == place_max:
                     r[i_place] = place_min
                 else:
