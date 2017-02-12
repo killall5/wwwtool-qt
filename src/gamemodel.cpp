@@ -12,66 +12,6 @@
 #include <QDateTime>
 #include <QMarginsF>
 
-class CommandModel {
-public:
-    CommandModel() : rightAnswersCount(0), rating(0) {
-        updateHash();
-    }
-
-    CommandModel(const QString& commandName) : rightAnswersCount(0), rating(0), m_commandName(commandName) {
-        updateHash();
-    }
-
-    void setCommandName(const QString& commandName) {
-        m_commandName = commandName;
-        updateHash();
-    }
-
-    QString commandName() const { return m_commandName; }
-    quint32 commandNameHash() const { return m_commandNameHash; }
-
-    enum CommandAnswer {
-        ANSWER_UNKNOWN = 0,
-        ANSWER_RIGHT,
-        ANSWER_WRONG
-    };
-
-    QVector<CommandAnswer> m_answers;
-    quint32 rightAnswersCount;
-    quint32 rating;
-    QString m_commandId;
-    QString m_commandLocation;
-    QString m_tableNumber;
-private:
-    QString m_commandName;
-    quint32 m_commandNameHash;
-
-    void updateHash() {
-        QCryptographicHash sha1(QCryptographicHash::Sha1);
-        std::string str = m_commandName.toStdString();
-        sha1.addData(str.c_str(), str.length());
-        m_commandNameHash = sha1.result().toHex().left(8).toULong(0, 16);
-    }
-};
-
-struct sort_by_name {
-    // always asceding
-    bool operator() (const CommandModel *x, const CommandModel *y) {
-        return x->commandName().toLower() < y->commandName().toLower();
-    }
-};
-
-struct sort_by_result {
-    // always desceding
-    bool operator() (const CommandModel *x, const CommandModel *y) {
-        if (x->rightAnswersCount == y->rightAnswersCount) {
-            return x->rating > y->rating;
-        } else {
-            return x->rightAnswersCount > y->rightAnswersCount;
-        }
-    }
-};
-
 GameModel::GameModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
@@ -574,7 +514,7 @@ void GameModel::exportHTML(QString fileName) const {
 void GameModel::exportCSV(QString fileName) const {
     // preparing
     QList<CommandModel*> sorted_commands = m_commands;
-    qSort(sorted_commands.begin(), sorted_commands.end(), sort_by_result());
+    qSort(sorted_commands.begin(), sorted_commands.end(), CommandModel::sort_by_result);
 
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
@@ -840,10 +780,10 @@ void GameModel::sort_by_criteria(SortCriteria criteria)
 {
     switch(criteria) {
         case SORT_BY_TITLE:
-            qSort(m_commands.begin(), m_commands.end(), sort_by_name());
+            qSort(m_commands.begin(), m_commands.end(), CommandModel::sort_by_name);
             break;
         case SORT_BY_RESULT:
-            qSort(m_commands.begin(), m_commands.end(), sort_by_result());
+            qSort(m_commands.begin(), m_commands.end(), CommandModel::sort_by_result);
             break;
         default:
             break;

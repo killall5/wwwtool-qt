@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     questioncountdialog.cpp \
     keypresseater.cpp \
     scannermanager.cpp \
-    tablepainterdelegate.cpp
+    tablepainterdelegate.cpp \
+    commandmodel.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -31,7 +32,8 @@ HEADERS  += \
     questioncountdialog.h \
     keypresseater.h \
     scannermanager.h \
-    tablepainterdelegate.h
+    tablepainterdelegate.h \
+    commandmodel.h
 
 RESOURCES += resources/templates.qrc
 

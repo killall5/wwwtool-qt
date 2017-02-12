@@ -6,8 +6,7 @@
 #include <QMap>
 #include <QPrinter>
 #include <QVector>
-
-class CommandModel;
+#include "commandmodel.h"
 
 class GameModel : public QAbstractTableModel
 {
