@@ -37,6 +37,7 @@ private:
     QAction *saveGameAct;
     QAction *loadGameAct;
     QAction *closeGameAct;
+    QAction *finishedGameAct;
     QAction *printBlanksAct;
     QAction *printTablesAct;
 
@@ -46,6 +47,7 @@ private:
     QAction *addCommandAct;
     QAction *deleteCommandAct;
     QAction *sortByTitleAct;
+    QAction *sortByTableAct;
     QAction *sortByResultAct;
 
     QAction *questionCountAct;
@@ -57,6 +59,7 @@ public slots:
     void newGame();
     void loadGame();
     void saveGame();
+    void changeFinished();
     void printBlanks();
     void printTables();
 
@@ -66,6 +69,7 @@ public slots:
     void addCommand();
     void deleteCommand();
     void sortByTitle();
+    void sortByTable();
     void sortByResult();
 
     void questionCount();
@@ -74,6 +78,7 @@ public slots:
     void timerFinished();
     void closeEvent (QCloseEvent *event);
     void titleChanged();
+    void finishedChanged();
     void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
     void fixQuestion(int);
 };

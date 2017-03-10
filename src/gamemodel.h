@@ -14,6 +14,7 @@ class GameModel : public QAbstractTableModel
 public:
 	enum SortCriteria {
 		SORT_BY_TITLE,
+        SORT_BY_TABLE,
 		SORT_BY_RESULT
 	};
 
@@ -39,8 +40,12 @@ public:
     int fixedQuestion() const { return m_fixedQuestion; }
 
     void sort_by_criteria(SortCriteria criteria);
+
+    void set_finished(bool);
+    bool finished() const { return m_finished; }
 signals:
     void titleChanged() const;
+    void finishedChanged() const;
     
 public slots:
     void setQuestionCount(quint32 questionCount);
@@ -55,6 +60,7 @@ private:
     QList<CommandModel*> m_commands;
     quint32 m_questionCount;
     bool m_autoSave;
+    bool m_finished;
     QVector<qint32> m_questionRating;
     mutable QString m_fileName;
     mutable QString m_title;

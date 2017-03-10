@@ -82,6 +82,11 @@ void MainWindow::createActions()
     closeGameAct->setShortcut(QKeySequence::Close);
     connect(closeGameAct, SIGNAL(triggered()), this, SLOT(close()));
 
+    finishedGameAct = new QAction(tr("Игра завершена"), this);
+    finishedGameAct->setCheckable(true);
+    finishedGameAct->setChecked(m_model->finished());
+    connect(finishedGameAct, SIGNAL(triggered(bool)), this, SLOT(changeFinished()));
+
     printBlanksAct = new QAction(tr("Бланки ответов..."), this);
     printBlanksAct->setShortcut(QKeySequence::Print);
     connect(printBlanksAct, SIGNAL(triggered()), this, SLOT(printBlanks()));
@@ -100,8 +105,12 @@ void MainWindow::createActions()
     sortByTitleAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_0));
     connect(sortByTitleAct, SIGNAL(triggered()), this, SLOT(sortByTitle()));
 
+    sortByTableAct = new QAction(tr("Сортировать по столику"), this);
+    sortByTableAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1));
+    connect(sortByTableAct, SIGNAL(triggered()), this, SLOT(sortByTable()));
+
     sortByResultAct = new QAction(tr("Сортировать по результату"), this);
-    sortByResultAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1));
+    sortByResultAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_2));
     connect(sortByResultAct, SIGNAL(triggered()), this, SLOT(sortByResult()));
 
     questionCountAct = new QAction(tr("Количество вопросов..."), this);
@@ -128,6 +137,8 @@ void MainWindow::createMenus()
 
     gameMenu->addAction(closeGameAct);
     gameMenu->addSeparator();
+    gameMenu->addAction(finishedGameAct);
+    gameMenu->addSeparator();
     gameMenu->addAction(printBlanksAct);
     gameMenu->addAction(printTablesAct);
 
@@ -136,6 +147,7 @@ void MainWindow::createMenus()
     commandsMenu->addAction(deleteCommandAct);
     commandsMenu->addSeparator();
     commandsMenu->addAction(sortByTitleAct);
+    commandsMenu->addAction(sortByTableAct);
     commandsMenu->addAction(sortByResultAct);
 
     QMenu *questionsMenu = menuBar()->addMenu(tr("Вопросы"));
@@ -299,6 +311,11 @@ void MainWindow::titleChanged()
     setWindowTitle(m_model->title());
 }
 
+void MainWindow::finishedChanged()
+{
+    finishedGameAct->setChecked(m_model->finished());
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     QMessageBox::StandardButton resBtn = QMessageBox::Yes;
@@ -323,6 +340,11 @@ void MainWindow::sortByTitle()
     m_model->sort_by_criteria(GameModel::SORT_BY_TITLE);
 }
 
+void MainWindow::sortByTable()
+{
+    m_model->sort_by_criteria(GameModel::SORT_BY_TABLE);
+}
+
 void MainWindow::sortByResult()
 {
     m_model->sort_by_criteria(GameModel::SORT_BY_RESULT);
@@ -334,4 +356,8 @@ void MainWindow::fixQuestion(int number) {
 
 void MainWindow::onQuestionFixed(int number) {
     m_model->fixQuestion(number);
+}
+
+void MainWindow::changeFinished() {
+    m_model->set_finished(!m_model->finished());
 }

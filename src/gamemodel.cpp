@@ -19,12 +19,13 @@ GameModel::GameModel(QObject *parent) :
     m_modified = false;
     m_fixedQuestion = 0;
     m_autoSave = false;
+    m_finished = false;
 }
 
 void GameModel::autoSave() {
     if (!m_autoSave || !m_modified || m_fileName.isEmpty()) return;
     save();
-    exportJSON(m_fileName + ".json");
+    //exportJSON(m_fileName + ".json");
 }
 
 void GameModel::addCommand(const QString& commandName)
@@ -151,6 +152,9 @@ QVariant GameModel::headerData(int section, Qt::Orientation orientation, int rol
         if (!m_commands[section]->m_commandLocation.isEmpty()) {
             ret = ret + ", " + m_commands[section]->m_commandLocation;
         }
+        if (m_commands[section]->m_tags.length() > 0) {
+            ret += " [" + m_commands[section]->m_tags.join(", ") + "]";
+        }
         return ret;
     }
     return QVariant();
@@ -193,7 +197,7 @@ void GameModel::printBlanks(QPrinter *printer) const
     QRectF questionBounds;
 
     for (int command=0; command < m_commands.size(); ++command) {
-        QString commandName = m_commands[command]->commandName();
+        QString commandName = QString("%1 %2").arg(m_commands[command]->m_tableNumber, m_commands[command]->commandName());
 
         for (int page=0; page < pagesCount; ++page) {
             quint32 col, row, q;
@@ -415,6 +419,7 @@ bool GameModel::save(QString fileName) const {
     xml.writeTextElement("QuestionCount", QString("%1").arg(m_questionCount));
     xml.writeTextElement("AutoSave", QString("%1").arg(m_autoSave));
     xml.writeTextElement("FixedQuestion", QString("%1").arg(m_fixedQuestion));
+    xml.writeTextElement("Finished", QString("%1").arg(m_finished));
     xml.writeEndElement();
 
     xml.writeStartElement("Commands");
@@ -430,6 +435,13 @@ bool GameModel::save(QString fileName) const {
         }
         if (!command->m_tableNumber.isEmpty()) {
             xml.writeTextElement("Table", command->m_tableNumber);
+        }
+        if (command->m_tags.length() > 0) {
+            xml.writeStartElement("Tags");
+            for(const auto &tag: command->m_tags) {
+                xml.writeTextElement("Tag", tag);
+            }
+            xml.writeEndElement();
         }
         for (quint32 q = 0; q < m_questionCount; ++q) {
             if (command->m_answers[q] != CommandModel::ANSWER_UNKNOWN) {
@@ -562,6 +574,7 @@ bool GameModel::load(QString fileName) {
 
     quint32 l_questionCount = 0;
     bool l_autoSave = false;
+    bool l_finished = false;
     int l_fixedQuestion = 0;
     QList<CommandModel *> l_commands;
     while (!xml.atEnd() && !xml.hasError()) {
@@ -573,15 +586,19 @@ bool GameModel::load(QString fileName) {
         if (token == QXmlStreamReader::StartElement) {
             if (xml.name() == "QuestionCount") {
                 xml.readNext();
-                l_questionCount = xml.text().toString().toInt() ;
+                l_questionCount = xml.text().toInt() ;
             }
             if (xml.name() == "AutoSave") {
                 xml.readNext();
-                l_autoSave = xml.text().toString().toInt();
+                l_autoSave = xml.text().toInt();
             }
             if (xml.name() == "FixedQuestion") {
                 xml.readNext();
-                l_fixedQuestion = xml.text().toString().toInt();
+                l_fixedQuestion = xml.text().toInt();
+            }
+            if (xml.name() == "Finished") {
+                xml.readNext();
+                l_finished = xml.text().toInt();
             }
             if (xml.name() == "Command") {
                 CommandModel *command = new CommandModel;
@@ -599,6 +616,9 @@ bool GameModel::load(QString fileName) {
                         } else if (xml.name() == "Table") {
                             xml.readNext();
                             command->m_tableNumber = xml.text().toString();
+                        } else if (xml.name() == "Tag") {
+                            xml.readNext();
+                            command->m_tags << xml.text().toString();
                         } else if (xml.name() == "Question") {
                             QXmlStreamAttributes attr = xml.attributes();
                             if (attr.hasAttribute("number") && attr.hasAttribute("value")) {
@@ -627,6 +647,7 @@ bool GameModel::load(QString fileName) {
 
     setQuestionCount(l_questionCount);
     m_autoSave = l_autoSave;
+    set_finished(l_finished);
     m_fixedQuestion = l_fixedQuestion;
 
     for (quint32 q = 0; q < l_questionCount; ++q) {
@@ -782,6 +803,9 @@ void GameModel::sort_by_criteria(SortCriteria criteria)
         case SORT_BY_TITLE:
             qSort(m_commands.begin(), m_commands.end(), CommandModel::sort_by_name);
             break;
+        case SORT_BY_TABLE:
+            qSort(m_commands.begin(), m_commands.end(), CommandModel::sort_by_table);
+            break;
         case SORT_BY_RESULT:
             qSort(m_commands.begin(), m_commands.end(), CommandModel::sort_by_result);
             break;
@@ -790,4 +814,13 @@ void GameModel::sort_by_criteria(SortCriteria criteria)
     }
 
     layoutChanged();
+}
+
+void GameModel::set_finished(bool value) {
+    if (value == m_finished) return;
+
+    m_finished = value;
+    emit finishedChanged();
+    m_modified = true;
+    autoSave();
 }

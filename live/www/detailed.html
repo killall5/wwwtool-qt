@@ -200,9 +200,12 @@ function refreshResult(url) {
             e_fixed_question.innerHTML = 'Производится ввод ответов на вопрос №' + data.fixed_question + '.';
             $('td.q' + (data.fixed_question-1)).addClass('active');
         } else {
-            e_fixed_question.innerHTML = 'Ввод ответов завершен.';
+            if (data.finished) {
+                e_fixed_question.innerHTML = 'Игра окончена.';
+            } else {
+                e_fixed_question.innerHTML = 'Ввод ответов завершен.';
+            }
         }
-            //e_fixed_question.innerHTML = 'Игра окончена.';
         Results = data.res;
         Format = data.format
         fillTable(Results, Format);

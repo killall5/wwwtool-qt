@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/bin/sh -e
 
-mkdir -p /var/www/superiority/2016
-cd /var/www/superiority/2016
+cd /var/www/superiority
+year=$(cat current)
+mkdir -p $year
+cd $year
 
 while true; do
 	/usr/local/bin/update_results.py

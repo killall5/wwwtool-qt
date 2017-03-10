@@ -34,6 +34,11 @@ bool CommandModel::sort_by_name(const CommandModel *x, const CommandModel *y) {
     return x->commandName().toLower() < y->commandName().toLower();
 }
 
+// always asceding
+bool CommandModel::sort_by_table(const CommandModel *x, const CommandModel *y) {
+    return x->m_tableNumber.toInt() < y->m_tableNumber.toInt();
+}
+
 // always desceding
 bool CommandModel::sort_by_result(const CommandModel *x, const CommandModel *y) {
     if (x->rightAnswersCount == y->rightAnswersCount) {

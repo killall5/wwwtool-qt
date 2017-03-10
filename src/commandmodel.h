@@ -27,8 +27,10 @@ public:
     QString m_commandId;
     QString m_commandLocation;
     QString m_tableNumber;
+    QStringList m_tags;
 
     static bool sort_by_name(const CommandModel *x, const CommandModel *y);
+    static bool sort_by_table(const CommandModel *x, const CommandModel *y);
     static bool sort_by_result(const CommandModel *x, const CommandModel *y);
 private:
     QString m_commandName;
