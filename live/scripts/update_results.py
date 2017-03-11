@@ -50,6 +50,8 @@ def main():
         serialized['res'] = all_commands
         save_jsoned(serialized, 'dashboard.json')
 
+    chgklive = game.slice_commands(ResultsView(qmin=45))
+    save_jsoned(chgklive.serialize(), 'chgklive.json')
 
 if __name__ == '__main__':
     main()

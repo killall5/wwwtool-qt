@@ -114,6 +114,7 @@ class Game(object):
                 place_min=6,
                 place_max=7,
                 place=8,
+                tags=9,
             )
         )
         for cmd in self.commands:
@@ -127,6 +128,7 @@ class Game(object):
                 cmd.place_min,
                 cmd.place_max,
                 str(cmd.place_min) if cmd.place_min==cmd.place_max else '{0}-{1}'.format(cmd.place_min, cmd.place_max),
+                cmd.tags,
             ])
         return data
 
