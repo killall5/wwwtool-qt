@@ -1,31 +1,47 @@
-#include "mainwindow.h"
 #include <QtDebug>
 #include <QMenuBar>
 #include <QFileDialog>
-#include "addcommanddialog.h"
-#include "questioncountdialog.h"
-#include "tablepainterdelegate.h"
 #include <QHeaderView>
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QMessageBox>
 #include <QMediaPlayer>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGroupBox>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QTableView>
+#include <QTimer>
+#include <QKeyEvent>
+
+#include <string>
+
+#include "mainwindow.h"
+#include "addcommanddialog.h"
+#include "questioncountdialog.h"
+#include "tablepainterdelegate.h"
+#include "keyenterreceiver.h"
+
+using std::string;
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
+    QWidget(parent)
 {
-    init();
-}
+    m_model = new GameModel;
 
-void MainWindow::init()
-{
+    createActions();
+    createMenus();
+
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowIcon(QIcon(":/img/wwwtool-old.ico"));
 
-    m_model = new GameModel(this);
     connect(m_model, SIGNAL(titleChanged()), this, SLOT(titleChanged()));
+    connect(m_model, SIGNAL(questionCountChanged(int)), this, SLOT(questionCountChanged(int)));
 
-    gameTable = new QTableView(this);
+    gameTable = new QTableView;
+    gameTable->setFocusPolicy(Qt::NoFocus);
     originalPalette = gameTable->palette();
     gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
@@ -33,18 +49,45 @@ void MainWindow::init()
 
     gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     connect(gameTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
-    connect(gameTable->horizontalHeader(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(fixQuestion(int)));
 
-    setCentralWidget(gameTable);
+    QHBoxLayout *inputHelperLayout = new QHBoxLayout;
 
-    createActions();
-    createMenus();
+    QGroupBox *inputHelperBox = new QGroupBox;
+
+    QLabel *fixedQuestionLabel = new QLabel(tr("Вопрос:"));
+    fixedQuestionBox = new QComboBox;
+    fixedQuestionBox->setEditable(true);
+    connect(fixedQuestionBox, SIGNAL(currentIndexChanged(int)), this, SLOT(fixQuestion(int)));
+    connect(m_model, SIGNAL(fixedQuestionChanged(int)), fixedQuestionBox, SLOT(setCurrentIndex(int)));
+
+    inputHelperLayout->addWidget(fixedQuestionLabel);
+    inputHelperLayout->addWidget(fixedQuestionBox);
+
+    helperLabel = new QLabel(tr("Фильтр команд:"));
+    helperLineEdit = new QLineEdit;
+    helperLabel->setBuddy(helperLineEdit);
+
+    KeyEnterReceiver *ker = new KeyEnterReceiver;
+    helperLineEdit->installEventFilter(ker);
+    connect(ker, SIGNAL(enterPressed()), this, SLOT(enterKeyPressed()));
+
+    inputHelperLayout->addWidget(helperLabel);
+    inputHelperLayout->addWidget(helperLineEdit);
+
+    inputHelperBox->setLayout(inputHelperLayout);
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->setMargin(0);
+    layout->setSpacing(0);
+//    layout->setMenuBar(menuBar);
+    layout->addWidget(gameTable);
+    layout->addWidget(inputHelperBox);
+
+    setLayout(layout);
+
+
+
     resize(700, 500);
-
-    ScannerManager::instance()->addListener(this);
-    kpe = new KeyPressEater(this);
-    connect(kpe, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressEvent(QKeyEvent*)));
-    gameTable->installEventFilter(kpe);
 
     timer = new QTimer(this);
     timer->setSingleShot(true);
@@ -55,9 +98,6 @@ void MainWindow::init()
 
 MainWindow::~MainWindow()
 {
-    ScannerManager::instance()->removeListener(this);
-    gameTable->removeEventFilter(kpe);
-    delete kpe;
     delete gameTable;
     delete m_model;
     delete timer;
@@ -85,7 +125,7 @@ void MainWindow::createActions()
     finishedGameAct = new QAction(tr("Игра завершена"), this);
     finishedGameAct->setCheckable(true);
     finishedGameAct->setChecked(m_model->finished());
-    connect(finishedGameAct, SIGNAL(triggered(bool)), this, SLOT(changeFinished()));
+    connect(finishedGameAct, SIGNAL(triggered()), this, SLOT(changeFinished()));
 
     printBlanksAct = new QAction(tr("Бланки ответов..."), this);
     printBlanksAct->setShortcut(QKeySequence::Print);
@@ -126,7 +166,9 @@ void MainWindow::createActions()
 
 void MainWindow::createMenus()
 {
-    QMenu *gameMenu = menuBar()->addMenu(tr("Игра"));
+    QMenuBar *menuBar = new QMenuBar(this);
+
+    QMenu *gameMenu = menuBar->addMenu(tr("Игра"));
     gameMenu->addAction(newGameAct);
     gameMenu->addAction(saveGameAct);
     gameMenu->addAction(loadGameAct);
@@ -142,7 +184,7 @@ void MainWindow::createMenus()
     gameMenu->addAction(printBlanksAct);
     gameMenu->addAction(printTablesAct);
 
-    QMenu *commandsMenu = menuBar()->addMenu(tr("Команды"));
+    QMenu *commandsMenu = menuBar->addMenu(tr("Команды"));
     commandsMenu->addAction(addCommandAct);
     commandsMenu->addAction(deleteCommandAct);
     commandsMenu->addSeparator();
@@ -150,11 +192,9 @@ void MainWindow::createMenus()
     commandsMenu->addAction(sortByTableAct);
     commandsMenu->addAction(sortByResultAct);
 
-    QMenu *questionsMenu = menuBar()->addMenu(tr("Вопросы"));
+    QMenu *questionsMenu = menuBar->addMenu(tr("Вопросы"));
     questionsMenu->addAction(questionCountAct);
 
-//    QMenu *help = menuBar()->addMenu(tr("Help"));
-//    Q_UNUSED(help);
 }
 
 void MainWindow::newGame()
@@ -280,27 +320,6 @@ void MainWindow::selectionChanged(const QItemSelection & selected, const QItemSe
     deleteCommandAct->setEnabled(!selected.isEmpty());
 }
 
-void MainWindow::onTextScanned(const QString &text)
-{
-    if (text.length() < 2) {
-        return;
-    }
-
-    QPalette p = originalPalette;
-    if (m_model->readFromScanner(text)) {
-        player->setMedia(QUrl("qrc:/positive.wav"));
-        p.setColor(QPalette::Base, QColor("green"));
-    } else {
-        player->setMedia(QUrl("qrc:/negative.wav"));
-        p.setColor(QPalette::Base, QColor("red"));
-    }
-    gameTable->setPalette(p);
-    timer->stop();
-    timer->start(100);
-    player->setVolume(100);
-    player->play();
-}
-
 void MainWindow::timerFinished()
 {
     gameTable->setPalette(originalPalette);
@@ -350,14 +369,85 @@ void MainWindow::sortByResult()
     m_model->sort_by_criteria(GameModel::SORT_BY_RESULT);
 }
 
-void MainWindow::fixQuestion(int number) {
-    ScannerManager::instance()->fixQuestion(number);
-}
-
-void MainWindow::onQuestionFixed(int number) {
+void MainWindow::fixQuestion(int number) {    
     m_model->fixQuestion(number);
+    if (number > 0) {
+        gameTable->scrollTo(m_model->index(0, number));
+        helperLabel->setText(tr("Код или #стол команды:"));
+    } else {
+        helperLabel->setText(tr("Фильтр команд:"));
+    }
+    helperLineEdit->setFocus();
 }
 
 void MainWindow::changeFinished() {
     m_model->set_finished(!m_model->finished());
+}
+
+void MainWindow::questionCountChanged(int count) {
+    int old_value = fixedQuestionBox->currentIndex();
+    fixedQuestionBox->clear();
+    fixedQuestionBox->addItem("-");
+    for (int i=0; i<count; ++i) {
+        fixedQuestionBox->addItem(QString("%1").arg(i+1));
+    }
+    fixedQuestionBox->setCurrentIndex(old_value);
+}
+
+void MainWindow::enterKeyPressed() {
+    helperLineEdit->selectAll();
+    QString text = helperLineEdit->text();
+
+    if (m_model->fixedQuestion() == 0) {
+        filterCommands(text);
+    } else {
+        processScannedText(text);
+    }
+}
+
+void MainWindow::filterCommands(const QString& value) {
+    if (value.isEmpty()) {
+        return;
+    }
+    gameTable->clearSelection();
+    gameTable->setSelectionMode(QAbstractItemView::MultiSelection);
+    int found_row = -1;
+    for (int row=0; row < m_model->rowCount(); ++row) {
+        QString title = m_model->headerData(row, Qt::Vertical, Qt::DisplayRole).toString().toLower();
+        if (title.contains(value.toLower())) {
+            gameTable->selectRow(row);
+            if (found_row == -1) {
+                found_row = row;
+            }
+        }
+    }
+    gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    if (found_row >= 0) {
+        gameTable->scrollTo(m_model->index(found_row, 0));
+        gameTable->setFocus();
+    }
+}
+
+void MainWindow::processScannedText(const QString &value) {
+    QPalette p = originalPalette;
+    QModelIndexList affectedIndexes;
+    if (m_model->readFromScanner(value, &affectedIndexes)) {
+        gameTable->clearSelection();
+        gameTable->setSelectionMode(QAbstractItemView::MultiSelection);
+        for(auto index: affectedIndexes) {
+            gameTable->scrollTo(index);
+            gameTable->selectionModel()->select(index, QItemSelectionModel::Select);
+        }
+        gameTable->setSelectionMode(QAbstractItemView::SingleSelection);
+        player->setMedia(QUrl("qrc:/positive.wav"));
+        p.setColor(QPalette::Base, QColor("green"));
+    } else {
+        player->setMedia(QUrl("qrc:/negative.wav"));
+        p.setColor(QPalette::Base, QColor("red"));
+    }
+    gameTable->setPalette(p);
+    timer->stop();
+    timer->start(200);
+    player->setVolume(100);
+    player->play();
 }

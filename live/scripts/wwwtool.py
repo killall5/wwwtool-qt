@@ -153,7 +153,7 @@ class Game(object):
             for tag in cmd.findall('./Tags/Tag'):
                 command.tags.add(tag.text)
             for question in cmd.findall('./Question[@value="1"]'):
-                command.right_answers.add(int(question.get('number')))
+                command.right_answers.add(int(question.get('number'))-1)
             game.commands.append(command)
         return game
 

@@ -19,10 +19,9 @@ SOURCES += main.cpp\
     addcommanddialog.cpp \
     gamemodel.cpp \
     questioncountdialog.cpp \
-    keypresseater.cpp \
-    scannermanager.cpp \
     tablepainterdelegate.cpp \
-    commandmodel.cpp
+    commandmodel.cpp \
+    keyenterreceiver.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -30,10 +29,9 @@ HEADERS  += \
     addcommanddialog.h \
     gamemodel.h \
     questioncountdialog.h \
-    keypresseater.h \
-    scannermanager.h \
     tablepainterdelegate.h \
-    commandmodel.h
+    commandmodel.h \
+    keyenterreceiver.h
 
 RESOURCES += resources/templates.qrc
 

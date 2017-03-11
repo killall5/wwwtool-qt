@@ -1,37 +1,36 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QAction>
-#include <QKeyEvent>
-#include <QTableView>
-#include "keypresseater.h"
+#include <QWidget>
 #include "gamemodel.h"
 
-#include "scannermanager.h"
-
 class QMediaPlayer;
+class QAction;
+class QComboBox;
+class QKeyEvent;
+class QTableView;
+class QMenuBar;
+class QItemSelection;
+class QLineEdit;
+class QTimer;
+class QString;
+class QLabel;
 
-class MainWindow : public QMainWindow, public ScannerManagerListener
+class MainWindow : public QWidget
 {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void onTextScanned(const QString &);
-    void onQuestionFixed(int);
-    
 private:
     GameModel *m_model;
 
-    void init();
     void createActions();
     void createMenus();
 
     QTableView *gameTable;
     QPalette originalPalette;
-    KeyPressEater *kpe;
 
     QAction *newGameAct;
     QAction *saveGameAct;
@@ -51,8 +50,15 @@ private:
     QAction *sortByResultAct;
 
     QAction *questionCountAct;
-    QTimer *timer;
     QMediaPlayer *player;
+    QMenuBar *menuBar;
+    QComboBox *fixedQuestionBox;
+    QLabel *helperLabel;
+    QLineEdit *helperLineEdit;
+    QTimer *timer;
+
+    void filterCommands(const QString& value);
+    void processScannedText(const QString& value);
 signals:
     
 public slots:
@@ -74,13 +80,16 @@ public slots:
 
     void questionCount();
 
-    void keyPressEvent(QKeyEvent *);
     void timerFinished();
+
+    void keyPressEvent(QKeyEvent *);
     void closeEvent (QCloseEvent *event);
     void titleChanged();
     void finishedChanged();
     void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
     void fixQuestion(int);
+    void questionCountChanged(int);
+    void enterKeyPressed();
 };
 
 #endif // MAINWINDOW_H

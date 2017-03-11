@@ -46,14 +46,16 @@ public:
 signals:
     void titleChanged() const;
     void finishedChanged() const;
-    
+    void questionCountChanged(int) const;
+    void fixedQuestionChanged(int) const;
+
 public slots:
     void setQuestionCount(quint32 questionCount);
     void click(int col, int row);
     void empty(int col, int row);
     void printBlanks(QPrinter *printer) const;
     void printTables(QPrinter *printer) const;
-    bool readFromScanner(const QString& text);
+    bool readFromScanner(const QString& text, QModelIndexList *affectedIndexes);
     void fixQuestion(int column);
 
 private:
@@ -71,7 +73,7 @@ private:
     bool fromBarcodeText(const QString& text, quint32 *hash, quint32 *question) const;
 
     void invertCommandResult(int commandNumber, quint32 question);
-    void discardCommandResult(int commandNumber, quint32 question);
+    void setCommandResult(int commandNumber, quint32 question, CommandModel::CommandAnswer);
     void autoSave();
     QByteArray get_jsonResults() const;
 };
