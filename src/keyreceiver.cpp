@@ -1,17 +1,18 @@
-#include "keyenterreceiver.h"
+#include "keyreceiver.h"
 #include <QEvent>
 #include <QKeyEvent>
 
-KeyEnterReceiver::KeyEnterReceiver(QObject *parent) : QObject(parent)
+KeyReceiver::KeyReceiver(QList<int> keys, QObject *parent)
+    : QObject(parent), acceptedKeys(keys)
 {
 
 }
 
-bool KeyEnterReceiver::eventFilter(QObject *obj, QEvent *event) {
+bool KeyReceiver::eventFilter(QObject *obj, QEvent *event) {
     if (event->type()==QEvent::KeyPress) {
         QKeyEvent* key = static_cast<QKeyEvent*>(event);
-        if ( (key->key()==Qt::Key_Enter) || (key->key()==Qt::Key_Return) ) {
-            emit enterPressed();
+        if (acceptedKeys.contains(key->key())) {
+            emit acceptedKeyPressed();
         } else {
             return QObject::eventFilter(obj, event);
         }

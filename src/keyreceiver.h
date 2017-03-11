@@ -2,18 +2,22 @@
 #define KEYENTERRECEIVER_H
 
 #include <QObject>
+#include <QList>
 
-class KeyEnterReceiver : public QObject
+class KeyReceiver : public QObject
 {
     Q_OBJECT
 public:
-    explicit KeyEnterReceiver(QObject *parent = 0);
+    explicit KeyReceiver(QList<int> keys, QObject *parent = 0);
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event);
 
+private:
+    QList<int> acceptedKeys;
+
 signals:
-    void enterPressed();
+    void acceptedKeyPressed();
 
 public slots:
 };

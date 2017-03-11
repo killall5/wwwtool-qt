@@ -82,14 +82,15 @@ public slots:
 
     void timerFinished();
 
-    void keyPressEvent(QKeyEvent *);
+    void spacePressed();
+    void escapePressed();
     void closeEvent (QCloseEvent *event);
     void titleChanged();
     void finishedChanged();
     void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
     void fixQuestion(int);
     void questionCountChanged(int);
-    void enterKeyPressed();
+    void helperLineEditChanged();
 };
 
 #endif // MAINWINDOW_H

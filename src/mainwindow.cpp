@@ -22,7 +22,7 @@
 #include "addcommanddialog.h"
 #include "questioncountdialog.h"
 #include "tablepainterdelegate.h"
-#include "keyenterreceiver.h"
+#include "keyreceiver.h"
 
 using std::string;
 
@@ -41,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_model, SIGNAL(questionCountChanged(int)), this, SLOT(questionCountChanged(int)));
 
     gameTable = new QTableView;
-    gameTable->setFocusPolicy(Qt::NoFocus);
     originalPalette = gameTable->palette();
     gameTable->horizontalHeader()->setDefaultSectionSize(40);
     gameTable->setModel(m_model);
@@ -49,6 +48,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     gameTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     connect(gameTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+
+    KeyReceiver *escape_receiver = new KeyReceiver({Qt::Key_Escape});
+    connect(escape_receiver, SIGNAL(acceptedKeyPressed()), this, SLOT(escapePressed()));
+    gameTable->installEventFilter(escape_receiver);
+
+    KeyReceiver *space_receiver = new KeyReceiver({Qt::Key_Space});
+    connect(space_receiver, SIGNAL(acceptedKeyPressed()), this, SLOT(spacePressed()));
+    gameTable->installEventFilter(space_receiver);
 
     QHBoxLayout *inputHelperLayout = new QHBoxLayout;
 
@@ -67,9 +74,9 @@ MainWindow::MainWindow(QWidget *parent) :
     helperLineEdit = new QLineEdit;
     helperLabel->setBuddy(helperLineEdit);
 
-    KeyEnterReceiver *ker = new KeyEnterReceiver;
-    helperLineEdit->installEventFilter(ker);
-    connect(ker, SIGNAL(enterPressed()), this, SLOT(enterKeyPressed()));
+    KeyReceiver *enter_receiver = new KeyReceiver({Qt::Key_Enter, Qt::Key_Return});
+    connect(enter_receiver, SIGNAL(acceptedKeyPressed()), this, SLOT(helperLineEditChanged()));
+    helperLineEdit->installEventFilter(enter_receiver);
 
     inputHelperLayout->addWidget(helperLabel);
     inputHelperLayout->addWidget(helperLineEdit);
@@ -302,18 +309,21 @@ void MainWindow::questionCount()
     dialog.exec();
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-    QModelIndexList s = gameTable->selectionModel()->selection().indexes();
-    if (s.isEmpty()) return;
-    foreach (QModelIndex i, s) {
-        if (event->key() == 32) {
-            m_model->click(i.column(), i.row());
-        } else if (event->key() == Qt::Key_Escape) {
-            m_model->empty(i.column(), i.row());
-        }
+void MainWindow::spacePressed() {
+    qDebug() << "Space";
+    for (auto i: gameTable->selectionModel()->selection().indexes()) {
+        m_model->click(i.column(), i.row());
     }
 }
+
+
+void MainWindow::escapePressed() {
+    qDebug() << "Escape";
+    for (auto i: gameTable->selectionModel()->selection().indexes()) {
+        m_model->empty(i.column(), i.row());
+    }
+}
+
 void MainWindow::selectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
 {
     Q_UNUSED(deselected);
@@ -394,7 +404,7 @@ void MainWindow::questionCountChanged(int count) {
     fixedQuestionBox->setCurrentIndex(old_value);
 }
 
-void MainWindow::enterKeyPressed() {
+void MainWindow::helperLineEditChanged() {
     helperLineEdit->selectAll();
     QString text = helperLineEdit->text();
 
