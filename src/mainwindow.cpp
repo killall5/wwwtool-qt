@@ -86,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QVBoxLayout *layout = new QVBoxLayout;
     layout->setMargin(0);
     layout->setSpacing(0);
-//    layout->setMenuBar(menuBar);
+    layout->setMenuBar(menuBar);
     layout->addWidget(gameTable);
     layout->addWidget(inputHelperBox);
 
@@ -109,6 +109,7 @@ MainWindow::~MainWindow()
     delete m_model;
     delete timer;
     delete player;
+    delete menuBar;
 }
 
 void MainWindow::createActions()
@@ -164,25 +165,16 @@ void MainWindow::createActions()
     questionCountAct->setShortcut(tr("Ctrl+E"));
     connect(questionCountAct, SIGNAL(triggered()), this, SLOT(questionCount()));
 
-    exportHTMLAct = new QAction(tr("HMTL..."), this);
-    connect(exportHTMLAct, SIGNAL(triggered()), this, SLOT(exportHTML()));
-
-    exportCSVAct = new QAction(tr("CSV..."), this);
-    connect(exportCSVAct, SIGNAL(triggered()), this, SLOT(exportCSV()));
 }
 
 void MainWindow::createMenus()
 {
-    QMenuBar *menuBar = new QMenuBar(this);
+    menuBar = new QMenuBar(this);
 
     QMenu *gameMenu = menuBar->addMenu(tr("Игра"));
     gameMenu->addAction(newGameAct);
     gameMenu->addAction(saveGameAct);
     gameMenu->addAction(loadGameAct);
-
-    QMenu *exportMenu = gameMenu->addMenu(tr("Экспорт"));
-    exportMenu->addAction(exportHTMLAct);
-    exportMenu->addAction(exportCSVAct);
 
     gameMenu->addAction(closeGameAct);
     gameMenu->addSeparator();
@@ -237,21 +229,6 @@ void MainWindow::saveGame()
         m_model->save();
     }
 }
-
-void MainWindow::exportHTML()
-{
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("HTML (*.html)"));
-    if (fileName.isEmpty()) return;
-    m_model->exportHTML(fileName);
-}
-
-void MainWindow::exportCSV()
-{
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Export results"), QString(), tr("CSV (*.csv)"));
-    if (fileName.isEmpty()) return;
-    m_model->exportCSV(fileName);
-}
-
 
 void MainWindow::printBlanks()
 {

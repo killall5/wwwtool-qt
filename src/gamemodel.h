@@ -31,9 +31,6 @@ public:
     quint32 questionCount() { return m_questionCount; }
     bool save() const;
     bool save(QString fileName) const;
-    void exportJSON(QString fileName) const;
-    void exportHTML(QString fileName) const;
-    void exportCSV(QString fileName) const;
     bool load(QString fileName);
     QString title() const { return m_title; }
     bool modified() const { return m_modified; }
@@ -75,7 +72,6 @@ private:
     void invertCommandResult(int commandNumber, quint32 question);
     void setCommandResult(int commandNumber, quint32 question, CommandModel::CommandAnswer);
     void autoSave();
-    QByteArray get_jsonResults() const;
 };
 
 #endif // GAMEMODEL_H

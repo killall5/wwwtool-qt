@@ -40,9 +40,6 @@ private:
     QAction *printBlanksAct;
     QAction *printTablesAct;
 
-    QAction *exportHTMLAct;
-    QAction *exportCSVAct;
-
     QAction *addCommandAct;
     QAction *deleteCommandAct;
     QAction *sortByTitleAct;
@@ -68,9 +65,6 @@ public slots:
     void changeFinished();
     void printBlanks();
     void printTables();
-
-    void exportHTML();
-    void exportCSV();
 
     void addCommand();
     void deleteCommand();
