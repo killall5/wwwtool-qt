@@ -6,7 +6,7 @@
 <body>
 <style>
 body {
-  padding: 30pt 26pt 0 26pt;
+  padding: 50pt 25pt 0 25pt;
   margin: 0;
   overflow: hidden;
 }
@@ -68,7 +68,7 @@ span.attention {
 <script>
 <!--
   var Results = {/*Results*/};
-  var pos = 0, commands_per_page = 7;
+  var pos = 0, commands_per_page = 1;
 
   function displayResults() {
     var i_name = Results.format.name,
@@ -103,6 +103,12 @@ span.attention {
     text += '</table>';
 
     document.getElementById('results').innerHTML = text;
+
+    var H = -1;
+    $('tr').each(function(){H=Math.max(H,$(this).outerHeight())})
+    if(H>0) {
+       commands_per_page = Math.floor($(window).height()/H) - 3;
+    }
   }
 
   function refreshResults() {
