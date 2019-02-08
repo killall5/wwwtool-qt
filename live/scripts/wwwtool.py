@@ -124,7 +124,7 @@ class Game(object):
                 list(cmd.right_answers),
                 cmd.rating,
                 cmd.location or '',
-                str(cmd.table) or '',
+                cmd.table or '',
                 cmd.place_min,
                 cmd.place_max,
                 str(cmd.place_min) if cmd.place_min==cmd.place_max else '{0}-{1}'.format(cmd.place_min, cmd.place_max),
